@@ -1,0 +1,50 @@
+{
+  "name": "backend_taj_al",
+  "version": "1.0.0",
+  "description": "Backend of TAJ AL RAWNAQ company (Dubai). Written in TypeScript using Express & Mongoose.",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch --env-file=.env src/index.ts",
+    "build": "tsc",
+    "start": "node --env-file=.env dist/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/code2brothers/Backend_TAJ_AL_RAWNAQ.git"
+  },
+  "keywords": [
+    "ts",
+    "backend",
+    "code2Brothers",
+    "express",
+    "mongoose"
+  ],
+  "author": "Code2Brothers",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/code2brothers/Backend_TAJ_AL_RAWNAQ/issues"
+  },
+  "homepage": "https://github.com/code2brothers/Backend_TAJ_AL_RAWNAQ#readme",
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.991.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.2.1",
+    "multer": "^2.0.2",
+    "multer-s3": "^3.0.1"
+  },
+  "devDependencies": {
+    "@types/cookie-parser": "^1.4.10",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/multer": "^2.0.0",
+    "@types/multer-s3": "^3.0.3",
+    "prettier": "^3.8.1",
+    "tsx": "^4.21.0"
+  }
+}
