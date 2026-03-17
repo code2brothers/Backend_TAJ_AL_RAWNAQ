@@ -7,6 +7,7 @@ import {
     viewAllWorkerHandler,
     viewOneWorkerHandler
 } from "../controllers/worker.controller.js";
+import {uploadOnCloudFlare} from "../middleware/uploadonCloudFlare.middleware.js";
 
 const router = Router()
 
@@ -19,19 +20,19 @@ router.use(verifyAccess("MANAGE_WORKERS"))
 
 router
     .route("/addNewWorker")
-    .post(addNewWorkerHandler)
+    .post(uploadOnCloudFlare.single("documents"),addNewWorkerHandler)
 router
     .route("/viewAllWorker")
-    .post(viewAllWorkerHandler)
+    .get(viewAllWorkerHandler)
 router
-    .route("/viewOneWorker")
-    .post(viewOneWorkerHandler)
+    .route("/viewOneWorker/:visaNumber")
+    .get(viewOneWorkerHandler)
 
 router.use(verifyAdmin)
 
 router
     .route("/updateWorkerdetails")
-    .post(updateWorkerdetailsHandler)
+    .patch(updateWorkerdetailsHandler)
 
 
 export  default router

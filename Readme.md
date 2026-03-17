@@ -29,13 +29,14 @@ TODO_LIST
 
 
 9) payment me add, update , viewallpayment of that month and year , all have aggrete  function to give exact data 
-10) worker add, update , viewalluser , viewoneuser(fetch by visaNumber)
-11) company add, allcompany(in which documents show then we put in diffrent div) , update,allcompanyNameWith_id
+10) worker add, update , viewallworker , viewoneworker(fetch by visaNumber) (Done but few peoblems listedbelow)
+11) company add, allcompany(in which documents show then we put in diffrent div) , update,allcompanyNameWith_id(DONE)
 12) aggerate query for dashboard
 
 -----------------------------------------------------------------------------------------------------
 
-
-
+on duplicate  worker during new worker creation it still update documents
+update me pdf v update hona chahiye worker me
+addmoredocuments and delte in worker
 
 

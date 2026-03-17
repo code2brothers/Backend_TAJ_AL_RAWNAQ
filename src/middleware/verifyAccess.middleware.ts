@@ -24,7 +24,7 @@ const verifyAccess = (requiredSection:string) => {
         };
 };
 
-const IsAdmin =(req:AuthRequest, res:Response, next:NextFunction)=>{
+const verifyAdmin =(req:AuthRequest, res:Response, next:NextFunction)=>{
     const user = req.user;
     if(!user){
         throw new ApiError(401,"user not found from auth middleware!")
@@ -37,7 +37,7 @@ const IsAdmin =(req:AuthRequest, res:Response, next:NextFunction)=>{
 }
 
 
-export {verifyAccess,IsAdmin};
+export {verifyAccess,verifyAdmin};
 
     //pass it only
     // ['COMPANY_OVERVIEW', 'MANAGE_WORKERS','MANAGE_EMPLOYEES',  'MANAGE_PAYMENTS','MANAGE_COMPANY']

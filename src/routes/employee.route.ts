@@ -5,7 +5,7 @@ import {
     addNewEmployeeHandler, updateEmployeedetailsHandler,
     viewAllEmployeeHandler
 } from "../controllers/employee.controller.js";
-import {IsAdmin, verifyAccess} from "../middleware/verifyAccess.middleware.js";
+import { verifyAccess, verifyAdmin} from "../middleware/verifyAccess.middleware.js";
 
 const router = Router()
 
@@ -24,7 +24,7 @@ router
     .get(viewAllEmployeeHandler)
 
 
-router.use(IsAdmin)
+router.use(verifyAdmin)
 router
     .route("/updateEmployeeDetails")
     .patch(updateEmployeedetailsHandler)

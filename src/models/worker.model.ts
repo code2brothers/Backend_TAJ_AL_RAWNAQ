@@ -49,7 +49,8 @@ const workerSchema = new Schema<IWorker>(
         moneyPerHour: {
             type: Number,
             required: [true, "Hourly rate is required."],
-            min: [0, "Hourly rate cannot be negative."]
+            min: [0, "Hourly rate cannot be negative."],
+            default: 0
         },
         wpsPayment: {
             type: Number,
@@ -61,7 +62,8 @@ const workerSchema = new Schema<IWorker>(
         empCode_id: { type: String },
         dutyHour: {
             type: Number,
-            min: [0, "Duty hours cannot be negative."]
+            min: [0, "Duty hours cannot be negative."],
+            default: 0
         },
         is_Active: { type: Boolean, default: true },
         a: { type: String }, b: { type: String }, c: { type: String }, d: { type: String }, e: { type: String },
