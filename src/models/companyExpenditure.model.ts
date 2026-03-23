@@ -6,7 +6,9 @@ export interface ICompanyExpenditure extends Document {
     dateofPayment: Date;
     month: string;
     year: string;
+    paymentMode: "Cheque" | "Bank Transfer" | "Cash"|"UPI";
     transactionId: string;
+    remarks?: string;
     dataEnteredBY: mongoose.Types.ObjectId; // Relationship to User
 }
 
@@ -21,7 +23,16 @@ const companyExpenditureSchema = new Schema<ICompanyExpenditure>(
         dateofPayment: { type: Date, required: [true, "Payment date is required."] },
         month: { type: String, required: [true, "Month is required."] },
         year: { type: String, required: [true, "Year is required."] },
+        paymentMode: {
+            type: String,
+            enum: {
+                values: ["Cheque", "Bank Transfer", "Cash","UPI"],
+                message: "{VALUE} is not a valid payment mode. Use Cheque, Bank Transfer, or Cash."
+            },
+            required: [true, "Payment mode is required."]
+        },
         transactionId: { type: String, required: [true, "Transaction ID is required."] },
+        remarks: { type: String },
         dataEnteredBY: { type: Schema.Types.ObjectId, ref: "User", required: [true, "User ID tracking is required."] },
     },
     { timestamps: true }

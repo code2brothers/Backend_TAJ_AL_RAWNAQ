@@ -6,7 +6,7 @@ import {
     addPaymentHandler,
     updatePaymentdetailsHandler,
     viewAllPaymentHandler
-} from "../controllers/companyPaymentToOwner_Monthly.controller.js";
+} from "../controllers/companyExpenditure.controller.js";
 
 
 
@@ -14,7 +14,7 @@ const router = Router()
 
 router
     .route("/")
-    .get((req:AuthRequest,res:Response)=>{res.json("manage toOwner endpoint hit")})
+    .get((req:AuthRequest,res:Response)=>{res.json("manage compnayExpenditure endpoint hit")})
 
 router.use(verifyAccess("MANAGE_PAYMENTS"))
 
@@ -32,9 +32,6 @@ router.use(verifyAdmin)
 router
     .route("/updatePaymentdetails")
     .patch(updatePaymentdetailsHandler)
-
-
-
 
 
 

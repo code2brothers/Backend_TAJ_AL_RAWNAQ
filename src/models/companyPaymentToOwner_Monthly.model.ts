@@ -29,7 +29,7 @@ const companyPaymentToOwnerSchema = new Schema<ICompanyPaymentToOwner>(
         paymentMode: {
             type: String,
             enum: {
-                values: ["Cheque", "Bank Transfer", "Cash"],
+                values: ["Cheque", "Bank Transfer", "Cash","UPI"],
                 message: "{VALUE} is not a valid payment mode. Use Cheque, Bank Transfer, or Cash."
             },
             required: [true, "Payment mode is required."]
