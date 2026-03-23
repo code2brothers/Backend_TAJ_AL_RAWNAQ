@@ -10,6 +10,7 @@ import workerRouter from "./routes/worker.route.js"
 import companyRouter  from "./routes/company.route.js"
 import companyPaymentToOwner_MonthlyRouter from "./routes/companyPaymentToOwner_MonthlyRouter.route.js"
 import CompanyExpenditureRouter from "./routes/companyExpenditure.route.js"
+import ownerPaymentToWorker_MonthlyRouter from "./routes/ownerPaymentToWorker_MonthlyRouter.route.js"
 
 const app = express();
 app.use(express.json({limit:"16kb"}))
@@ -33,6 +34,7 @@ app.use("/api/v1/company",companyRouter)
 app.use("/api/v1/companyPaymentToOwner_Monthly",companyPaymentToOwner_MonthlyRouter)
 app.use("/api/v1/companyExpenditure",CompanyExpenditureRouter)
 
+app.use("/api/v1/ownerPaymentToWorker_Monthly",ownerPaymentToWorker_MonthlyRouter)
 
 app.use(ErrorHandler)
 export {app}
