@@ -8,6 +8,7 @@ import userRouter from "./routes/user.route.js"
 import employeeRouter from "./routes/employee.route.js"
 import workerRouter from "./routes/worker.route.js"
 import companyRouter  from "./routes/company.route.js"
+import companyPaymentToOwner_MonthlyRouter from "./routes/companyPaymentToOwner_MonthlyRouter.route.js"
 
 const app = express();
 app.use(express.json({limit:"16kb"}))
@@ -28,6 +29,7 @@ app.use(verifyJwt)
 app.use("/api/v1/employee",employeeRouter)
 app.use("/api/v1/worker",workerRouter)
 app.use("/api/v1/company",companyRouter)
+app.use("/api/v1/companyPaymentToOwner_Monthly",companyPaymentToOwner_MonthlyRouter)
 
 
 app.use(ErrorHandler)

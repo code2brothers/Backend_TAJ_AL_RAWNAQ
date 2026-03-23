@@ -3,11 +3,11 @@ import mongoose, { Schema, Document } from "mongoose";
 export interface ICompanyPaymentToOwner extends Document {
     amount: number;
     dateofPayment: Date;
-    paymentPuf: string; // 3rd party URL
+    paymentProof: string; // 3rd party URL
     company_id: mongoose.Types.ObjectId; // Relationship to Company
     month: string;
     year: string;
-    paymentMode: "Cheque" | "Bank Transfer" | "Cash";
+    paymentMode: "Cheque" | "Bank Transfer" | "Cash"|"UPI";
     transactionId: string;
     remarks?: string;
     dataEnteredBY: mongoose.Types.ObjectId; // Relationship to User
@@ -22,7 +22,7 @@ const companyPaymentToOwnerSchema = new Schema<ICompanyPaymentToOwner>(
             min: [0, "Payment amount cannot be negative."]
         },
         dateofPayment: { type: Date, required: [true, "Payment date is required."] },
-        paymentPuf: { type: String },
+        paymentProof: { type: String },
         company_id: { type: Schema.Types.ObjectId, ref: "Company", required: [true, "Company ID is required."] },
         month: { type: String, required: [true, "Month is required."] },
         year: { type: String, required: [true, "Year is required."] },
