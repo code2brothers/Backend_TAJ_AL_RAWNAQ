@@ -1,12 +1,9 @@
-import {Response, Router} from "express";
-import {AuthRequest} from "../type/auth.interafce.js";
-import {verifyAccess, verifyAdmin} from "../middleware/verifyAccess.middleware.js";
-import {updateWorkerdetailsHandler} from "../controllers/worker.controller.js";
+import { Router} from "express";
+import {verifyAccess} from "../middleware/verifyAccess.middleware.js";
 import {company_OverviewHandler} from "../controllers/company_Overview.controller.js";
 
 
 const router = Router()
-
 
 router.use(verifyAccess("COMPANY_OVERVIEW"))
 

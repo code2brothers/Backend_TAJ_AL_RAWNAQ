@@ -93,6 +93,21 @@ const addPaymentHandler =async(req:AuthRequest,res:Response)=>{
         {
             $unwind: "$companyInfo"
         },
+        // --- SECOND JOIN: Get the User (Admin/Staff) details ---
+        {
+            $lookup: {
+                from: "users",                 // Mongoose automatically names the User collection "users"
+                localField: "dataEnteredBY",   // The field in your Payment document
+                foreignField: "_id",           // The matching ID in the User collection
+                as: "dataEnteredBY"            // This overwrites the plain ID with the full User object!
+            }
+        },
+        {
+            $unwind: {
+                path: "$dataEnteredBY",
+                preserveNullAndEmptyArrays: true
+            }
+        },
         // Stage 4: Sort by date of payment (Newest first)
         {
             $sort: { dateofPayment: -1 }
@@ -102,7 +117,15 @@ const addPaymentHandler =async(req:AuthRequest,res:Response)=>{
         {
             $project: {
                 "companyInfo.createdAt": 0, // 0 means "exclude this field"
-                "companyInfo.updatedAt": 0
+                "companyInfo.updatedAt": 0,
+                "companyInfo.__v": 0,
+
+            //     not send employee details
+                "dataEnteredBY.password": 0,
+                "dataEnteredBY.refreshToken": 0,
+                "dataEnteredBY.createdAt": 0,
+                "dataEnteredBY.updatedAt": 0,
+                "dataEnteredBY.__v": 0
             }
         }
     ]);
