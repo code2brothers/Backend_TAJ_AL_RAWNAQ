@@ -2,7 +2,7 @@ import {Response, Router} from "express";
 import {AuthRequest} from "../type/auth.interafce.js";
 import {ApiResponse} from "../utils/ApiResponse.js";
 import {CompanyPaymentToOwner} from"../models/companyPaymentToOwner_Monthly.model.js"
-import {getFileUrl} from "../utils/cloudflare.js";
+import {deleteFileFromCloudFlare, getFileUrl} from "../utils/cloudflare.js";
 import {multerS3File} from "../constants.js";
 import {ApiError} from "../utils/ApiError.js";
 
@@ -37,7 +37,6 @@ const addPaymentHandler =async(req:AuthRequest,res:Response)=>{
     const file = req.file as multerS3File;
     const key = file.key;
     const paymentProofUrl = await getFileUrl(key);
-     (month as string).toLowerCase()
 
         // 4. Create the record immediately (Lightning fast!)
         const newPayment = await CompanyPaymentToOwner.create({
@@ -204,4 +203,45 @@ const addPaymentHandler =async(req:AuthRequest,res:Response)=>{
         .json(new ApiResponse(200, updatedPayment, "Payment details updated successfully"));
 };
 
-export {addPaymentHandler,viewAllPaymentHandler,updatePaymentdetailsHandler}
+ const updatedocumentHandler=async (req: AuthRequest, res: Response)=>{
+     const {_id,paymentProof}= req.body;
+     if (!_id) {
+         throw new ApiError(400, "Please provide the payment record ID (_id).");
+     }
+     if (!paymentProof) {
+         throw new ApiError(400, "Please provide the old paymentProof URL so it can be deleted.");
+     }
+     if (!req.file) {
+         throw new ApiError(400, "Please upload the new payment proof document.");
+     }
+
+     const file = req.file as multerS3File;
+     const key = file.key;
+     const paymentProofUrl = await getFileUrl(key);
+
+     if(!paymentProofUrl){
+         throw new ApiError(400,"Kindly Upload again paymetProof")
+     }
+
+     //  Delete
+     const oldkey = (paymentProof as string).split(`${process.env.PUBLICDOMAIN}/`)[1]
+     await deleteFileFromCloudFlare(oldkey)
+
+     const updatedcompany =await CompanyPaymentToOwner.findByIdAndUpdate(
+         _id,
+         {
+             paymentProof:paymentProofUrl
+         },
+         {
+             returnDocument:"after",
+             runValidators:true
+         }
+     )
+     if (!updatedcompany) {
+         throw new ApiError(404, "Payment record does not exist with the provided ID.");
+     }
+
+     res.status(200).json(new ApiResponse(200,updatedcompany,"Document Updated Succesfully"))
+
+ }
+export {addPaymentHandler,viewAllPaymentHandler,updatePaymentdetailsHandler,updatedocumentHandler}

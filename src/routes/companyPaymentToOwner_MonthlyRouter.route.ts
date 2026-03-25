@@ -3,7 +3,7 @@ import {AuthRequest} from "../type/auth.interafce.js";
 import {verifyAccess, verifyAdmin} from "../middleware/verifyAccess.middleware.js";
 import {uploadOnCloudFlare} from "../middleware/uploadonCloudFlare.middleware.js";
 import {
-    addPaymentHandler,
+    addPaymentHandler, updatedocumentHandler,
     updatePaymentdetailsHandler,
     viewAllPaymentHandler
 } from "../controllers/companyPaymentToOwner_Monthly.controller.js";
@@ -32,6 +32,9 @@ router.use(verifyAdmin)
 router
     .route("/updatePaymentdetails")
     .patch(updatePaymentdetailsHandler)
+router
+    .route("/updatedocument")
+    .patch(uploadOnCloudFlare.single("document"),updatedocumentHandler)
 
 
 
