@@ -2,6 +2,7 @@ import { Response, Router } from "express";
 import { AuthRequest } from "../type/auth.interafce.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { OwnerPaymentToWorker } from "../models/ownerPaymentToWorker_Monthly.model.js";
+import { Worker } from "../models/worker.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import mongoose from "mongoose";
 
@@ -170,7 +171,7 @@ import {deleteFileFromCloudFlare, getFileUrl} from "../utils/cloudflare.js";
 
 const viewAllPaymentHandler = async (req: AuthRequest, res: Response) => {
     // 1. We take month and year from req.query (e.g., ?year=2026 or ?month=march&year=2026)
-    const { month, year } = req.query;
+    const { month, year,visaNumber } = req.query;
 
     if (!year) {
         throw new ApiError(400, "Please provide at least a year to view payment info.");
@@ -181,6 +182,13 @@ const viewAllPaymentHandler = async (req: AuthRequest, res: Response) => {
     const matchFilter: any = { year: year as string };
     if (month) {
         matchFilter.month = (month as string).toLowerCase();
+    }
+    if (visaNumber) {
+       const worker = await Worker.findOne({visaNumber:visaNumber as string}).lean()
+       if(!worker){
+            throw new ApiError(404,"Worker not found")
+        }
+        matchFilter.worker_id = worker._id;
     }
 
     // 3. The MongoDB Aggregation Pipeline
