@@ -15,7 +15,12 @@ import company_OverviewRouter from "./routes/company_Overview.route.js"
 
 const app = express();
 app.use(express.json({limit:"16kb"}))
-app.use(cors())
+app.use(cors({
+  origin: process.env.CORS_ORIGIN || "http://localhost:3000",
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+}))
 app.use(express.urlencoded({extended:true,limit:"16kb"}))
 app.use(cookieParser())
 app.use(express.static("public"))
