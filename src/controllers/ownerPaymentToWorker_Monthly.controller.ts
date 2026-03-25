@@ -59,22 +59,25 @@ const addPaymentHandler = async (req: AuthRequest, res: Response) => {
 }
 
 const viewAllPaymentHandler = async (req: AuthRequest, res: Response) => {
-    // 1. We take month and year from req.query (e.g., ?month=march&year=2026)
+    // 1. We take month and year from req.query (e.g., ?year=2026 or ?month=march&year=2026)
     const { month, year } = req.query;
 
-    if (!month || !year) {
-        throw new ApiError(400, "Please provide both month and year to view the payment report.");
+    if (!year) {
+        throw new ApiError(400, "Please provide at least a year to view payment info.");
     }
 
+    // 2. Build the match filter dynamically
+    // Year is always required; month is optional
+    const matchFilter: any = { year: year as string };
+    if (month) {
+        matchFilter.month = (month as string).toLowerCase();
+    }
 
-    // 2. The MongoDB Aggregation Pipeline
+    // 3. The MongoDB Aggregation Pipeline
     const monthlyPayments = await OwnerPaymentToWorker.aggregate([
-        // Stage 1: Filter the payments to only get the exact month and year requested
+        // Stage 1: Filter payments by year (and optionally month)
         {
-            $match: {
-                month: (month as string).toLowerCase(),
-                year: year as string
-            }
+            $match: matchFilter
         },
         // Stage 2: The SQL "JOIN" equivalent.
         // Go to the 'workers' collection and find the matching document.

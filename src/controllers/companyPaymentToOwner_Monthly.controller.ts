@@ -64,18 +64,20 @@ const addPaymentHandler =async(req:AuthRequest,res:Response)=>{
     // 1. We take month and year from req.query (e.g., ?month=March&year=2026)
     const { month, year } = req.query;
 
-    if (!month || !year) {
-        throw new ApiError(400, "Please provide both month and year to view the payment report.");
+    if (!year) {
+        throw new ApiError(400, "Please provide at least year to view the payment report.");
     }
 
+    const matchFilter : any ={year:year as string};
+    if(month){
+        matchFilter.month = (month as string).toLowerCase();
+    }
+    
     // 2. The MongoDB Aggregation Pipeline
     const monthlyPayments = await CompanyPaymentToOwner.aggregate([
         // Stage 1: Filter the payments to only get the exact month and year requested
         {
-            $match: {
-                month: month as string,
-                year: year as string
-            }
+            $match: matchFilter
         },
         // Stage 2: The SQL "JOIN" equivalent.
         // Go to the 'companies' collection and find the matching document.
