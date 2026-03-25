@@ -4,9 +4,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { OwnerPaymentToWorker } from "../models/ownerPaymentToWorker_Monthly.model.js";
 import { Worker } from "../models/worker.model.js";
 import { ApiError } from "../utils/ApiError.js";
-import mongoose from "mongoose";
 
-import { Worker } from "../models/worker.model.js";
 import {multerS3File} from "../constants.js";
 import {deleteFileFromCloudFlare, getFileUrl} from "../utils/cloudflare.js";
 
