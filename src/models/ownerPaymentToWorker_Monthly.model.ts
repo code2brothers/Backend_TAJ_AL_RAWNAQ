@@ -9,8 +9,9 @@ export interface IOwnerPaymentToWorker extends Document {
     totalHours: number;
     hourRateFromCompany: number;
     hourRateToWorker: number;
-    payment_proof: string;
+    paymentProof: string;
     companyName: string;
+    remarks:string;
     dataEnteredBY: mongoose.Types.ObjectId; // Relationship to User
 }
 
@@ -36,7 +37,8 @@ const ownerPaymentToWorkerSchema = new Schema<IOwnerPaymentToWorker>(
             required: [true, "Worker hourly rate is required."],
             min: [0, "Rate cannot be negative."]
         },
-        payment_proof: { type: String },
+        paymentProof: { type: String },
+        remarks: { type: String },
         companyName: { type: String, required: [true, "Company name is required."] },
         dataEnteredBY: { type: Schema.Types.ObjectId, ref: "User", required: true },
     },
