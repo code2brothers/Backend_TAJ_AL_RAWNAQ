@@ -3,7 +3,7 @@ import {AuthRequest} from "../type/auth.interafce.js";
 import {verifyAccess, verifyAdmin} from "../middleware/verifyAccess.middleware.js";
 import {uploadOnCloudFlare} from "../middleware/uploadonCloudFlare.middleware.js";
 import {
-    addPaymentHandler, updatedocumentHandler,
+    addPaymentHandler,
     updatePaymentdetailsHandler,
     viewAllPaymentHandler
 } from "../controllers/companyPaymentToOwner_Monthly.controller.js";
@@ -21,7 +21,8 @@ router.use(verifyAccess("MANAGE_PAYMENTS"))
 
 router
     .route("/addPayment")
-    .post(uploadOnCloudFlare.single("paymentProof"),addPaymentHandler)
+    .post(uploadOnCloudFlare.single("document"),addPaymentHandler)
+
 router
     .route("/viewAllPayment")
     .get(viewAllPaymentHandler)
@@ -31,10 +32,11 @@ router.use(verifyAdmin)
 
 router
     .route("/updatePaymentdetails")
-    .patch(updatePaymentdetailsHandler)
-router
-    .route("/updatedocument")
-    .patch(uploadOnCloudFlare.single("document"),updatedocumentHandler)
+    .patch(uploadOnCloudFlare.single("document"),updatePaymentdetailsHandler)
+
+// router
+//     .route("/updatedocument")
+//     .patch(uploadOnCloudFlare.single("document"),updatedocumentHandler)
 
 
 
