@@ -243,7 +243,9 @@ const addPaymentHandler =async(req:AuthRequest,res:Response)=>{
          throw new ApiError(404, "Payment record does not exist with the provided ID.");
      }
 
-     res.status(200).json(new ApiResponse(200,updatedcompany,"Document Updated Succesfully"))
+    return  res
+            .status(200)
+            .json(new ApiResponse(200,updatedcompany,"Document Updated Succesfully"))
 
  }
 export {addPaymentHandler,viewAllPaymentHandler,updatePaymentdetailsHandler,updatedocumentHandler}

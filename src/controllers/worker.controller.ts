@@ -4,7 +4,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { Worker } from "../models/worker.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import {multerS3File} from "../constants.js";
-import {getFileUrl} from "../utils/cloudflare.js";
+import {deleteFileFromCloudFlare, getFileUrl} from "../utils/cloudflare.js";
 
 const addNewWorkerHandler = async (req: AuthRequest, res: Response) => {
     const { visaNumber, name, passportNumber, ...restData } = req.body;
@@ -124,9 +124,53 @@ const updateWorkerdetailsHandler = async (req: AuthRequest, res: Response) => {
         .json(new ApiResponse(200, updatedWorker, "Worker details updated successfully"));
 };
 
+const updatedocumentHandler=async (req: AuthRequest, res: Response)=>{
+    const {_id,documents}= req.body;
+    if (!_id) {
+        throw new ApiError(400, "Please provide the payment record ID (_id).");
+    }
+    if (!documents) {
+        throw new ApiError(400, "Please provide the old paymentProof URL so it can be deleted.");
+    }
+    if (!req.file) {
+        throw new ApiError(400, "Please upload the new payment proof document.");
+    }
+
+    const file = req.file as multerS3File;
+    const key = file.key;
+    const newDocUrl = await getFileUrl(key);
+
+    if(!newDocUrl){
+        throw new ApiError(400,"Kindly Upload again Worker Document")
+    }
+
+    //  Delete
+    const oldkey = (documents as string).split(`${process.env.PUBLICDOMAIN}/`)[1]
+    await deleteFileFromCloudFlare(oldkey)
+
+    const updatedWorker =await Worker.findByIdAndUpdate(
+        _id,
+        {
+            documents:newDocUrl
+        },
+        {
+            returnDocument:"after",
+            runValidators:true
+        }
+    )
+    if (!updatedWorker) {
+        throw new ApiError(404, "Worker record does not exist with the provided ID.");
+    }
+
+   return  res
+            .status(200)
+            .json(new ApiResponse(200,updatedWorker,"Worker Document Updated Succesfully"))
+
+}
 export {
     addNewWorkerHandler,
     updateWorkerdetailsHandler,
     viewAllWorkerHandler,
-    viewOneWorkerHandler
+    viewOneWorkerHandler,
+    updatedocumentHandler
 };

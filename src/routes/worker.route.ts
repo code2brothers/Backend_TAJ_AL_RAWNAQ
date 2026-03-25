@@ -8,6 +8,7 @@ import {
     viewOneWorkerHandler
 } from "../controllers/worker.controller.js";
 import {uploadOnCloudFlare} from "../middleware/uploadonCloudFlare.middleware.js";
+import {updatedocumentHandler} from "../controllers/worker.controller.js";
 
 const router = Router()
 
@@ -33,6 +34,9 @@ router.use(verifyAdmin)
 router
     .route("/updateWorkerdetails")
     .patch(updateWorkerdetailsHandler)
+router
+    .route("/updatedocument")
+    .patch(uploadOnCloudFlare.single("newdocument"),updatedocumentHandler)
 
 
 export  default router
