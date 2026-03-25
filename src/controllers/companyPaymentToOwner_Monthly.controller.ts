@@ -35,8 +35,11 @@ const addPaymentHandler =async(req:AuthRequest,res:Response)=>{
     }
 
     const file = req.file as multerS3File;
+    let paymentProofUrl
+    if(file){
     const key = file.key;
-    const paymentProofUrl = await getFileUrl(key);
+     paymentProofUrl = await getFileUrl(key);
+    }
 
         // 4. Create the record immediately (Lightning fast!)
         const newPayment = await CompanyPaymentToOwner.create({
@@ -49,7 +52,7 @@ const addPaymentHandler =async(req:AuthRequest,res:Response)=>{
             paymentMode,
             transactionId,
             remarks,
-            paymentProof: paymentProofUrl
+            paymentProof: paymentProofUrl?paymentProofUrl:""
         });
 
         return res
@@ -210,9 +213,7 @@ const addPaymentHandler =async(req:AuthRequest,res:Response)=>{
      if (!_id) {
          throw new ApiError(400, "Please provide the payment record ID (_id).");
      }
-     if (!paymentProof) {
-         throw new ApiError(400, "Please provide the old paymentProof URL so it can be deleted.");
-     }
+
      if (!req.file) {
          throw new ApiError(400, "Please upload the new payment proof document.");
      }
@@ -226,9 +227,10 @@ const addPaymentHandler =async(req:AuthRequest,res:Response)=>{
      }
 
      //  Delete
-     const oldkey = (paymentProof as string).split(`${process.env.PUBLICDOMAIN}/`)[1]
-     await deleteFileFromCloudFlare(oldkey)
-
+     if(paymentProof) {
+         const oldkey = (paymentProof as string).split(`${process.env.PUBLICDOMAIN}/`)[1]
+         await deleteFileFromCloudFlare(oldkey)
+     }
      const updatedcompany =await CompanyPaymentToOwner.findByIdAndUpdate(
          _id,
          {
