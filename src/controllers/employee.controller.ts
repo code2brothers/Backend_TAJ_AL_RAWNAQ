@@ -56,7 +56,7 @@ const updateEmployeedetailsHandler =async(req:AuthRequest,res:Response)=>{
             throw new ApiError(400, "Provide at least one field to update!");
         }
 
-        const forbiddenFields = ["password", "createdAt", "updatedAt"];
+        const forbiddenFields = ["createdAt", "updatedAt"];
 
         forbiddenFields.forEach((field) => {
             if (updateData[field] !== undefined) {
