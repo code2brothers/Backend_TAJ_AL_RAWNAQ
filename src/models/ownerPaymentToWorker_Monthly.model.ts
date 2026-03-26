@@ -9,7 +9,7 @@ export interface IOwnerPaymentToWorker extends Document {
     totalHours: number;
     hourRateFromCompany: number;
     hourRateToWorker: number;
-    paymentProof: string;
+    paymentMode: "Cheque" | "Bank Transfer" | "Cash"|"UPI"; paymentProof: string;
     companyName: string;
     remarks:string;
     dataEnteredBY: mongoose.Types.ObjectId; // Relationship to User
@@ -38,6 +38,14 @@ const ownerPaymentToWorkerSchema = new Schema<IOwnerPaymentToWorker>(
             min: [0, "Rate cannot be negative."]
         },
         paymentProof: { type: String },
+        paymentMode: {
+            type: String,
+            enum: {
+                values: ["Cheque", "Bank Transfer", "Cash","UPI"],
+                message: "{VALUE} is not a valid payment mode. Use Cheque, Bank Transfer, or Cash."
+            },
+            required: [true, "Payment mode is required."]
+        },
         remarks: { type: String },
         companyName: { type: String, required: [true, "Company name is required."] },
         dataEnteredBY: { type: Schema.Types.ObjectId, ref: "User", required: true },

@@ -16,6 +16,7 @@ import {deleteFileFromCloudFlare, getFileUrl} from "../utils/cloudflare.js";
         month,
         year,
         totalHours,
+        paymentMode,
         hourRateFromCompany,
         hourRateToWorker,
         companyName,
@@ -36,7 +37,8 @@ import {deleteFileFromCloudFlare, getFileUrl} from "../utils/cloudflare.js";
         !totalHours ||
         !hourRateFromCompany ||
         !hourRateToWorker ||
-        !companyName
+        !companyName ||
+        !paymentMode
     ) {
         if (file) {
             deleteFileFromCloudFlare(file.key).catch(e => console.error("Cleanup error:", e));
@@ -98,6 +100,7 @@ import {deleteFileFromCloudFlare, getFileUrl} from "../utils/cloudflare.js";
             year,
             transactionId,
             totalHours,
+            paymentMode,
             hourRateFromCompany,
             hourRateToWorker,
             companyName,
