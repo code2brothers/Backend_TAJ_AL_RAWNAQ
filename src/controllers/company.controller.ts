@@ -24,18 +24,22 @@ const addNewCompanyHandler = async (req: AuthRequest, res: Response) => {
     if (existingCompany) {
         throw new ApiError(409, "A company with this Name or Registration Number already exists.");
     }
-    // const files= req.files as multerS3File[]
-    const fileKeys =[]
+    // Process uploaded files into document objects
+    const documentObjects = [];
     for (const value of (req.files as multerS3File[])) {
-        const url = await getFileUrl(value.key);
-        fileKeys.push(url)
+        const fileUrl = await getFileUrl(value.key);
+        documentObjects.push({
+            link: fileUrl,
+            description: value.originalname || "Document",
+            date: new Date().toISOString(),
+        });
     }
 
     // Create the company
     const newCompany = await Company.create({
         companyName,
         registrationNo,
-        documents:fileKeys,
+        documents: documentObjects,
         ...restData
     });
 
@@ -45,8 +49,9 @@ const addNewCompanyHandler = async (req: AuthRequest, res: Response) => {
 };
 
 const viewAllCompanyHandler = async (req: AuthRequest, res: Response) => {
-    // Fetches all companies and sorts them newest first
-    const companies = await Company.find().sort({ createdAt: -1 });
+    // Use .lean() to get raw MongoDB data — avoids Mongoose subdocument casting issues
+    // when documents array has mixed formats (old plain strings + new objects)
+    const companies = await Company.find().sort({ createdAt: -1 }).lean();
 
     return res
         .status(200)
@@ -123,7 +128,7 @@ const updateCompanydetailsHandler = async (req: AuthRequest, res: Response) => {
 
 
 const addDocumentsHandler = async (req: AuthRequest, res: Response) => {
-    const { id } = req.body;
+    const { id, descriptions } = req.body;
 
     if (!id) {
         throw new ApiError(400, "Provide the company ID to add documents.");
@@ -133,19 +138,34 @@ const addDocumentsHandler = async (req: AuthRequest, res: Response) => {
         throw new ApiError(400, "Please upload at least one document.");
     }
 
-    //  Process the files and get their S3 URLs
-    const fileKeys: string[] = [];
-    for (const file of (req.files as multerS3File[])) {
-        const url = await getFileUrl(file.key);
-        fileKeys.push(url);
+    // Parse descriptions — may come as a JSON string array or a single string
+    let descArray: string[] = [];
+    if (descriptions) {
+        try {
+            descArray = typeof descriptions === "string" ? JSON.parse(descriptions) : descriptions;
+        } catch {
+            descArray = [descriptions];
+        }
     }
 
-    // 3. The Magic of $push and $each
+    // Process files into document objects matching the schema
+    const documentObjects = [];
+    const files = req.files as multerS3File[];
+    for (let i = 0; i < files.length; i++) {
+        const fileUrl = await getFileUrl(files[i].key);
+        documentObjects.push({
+            link: fileUrl,
+            description: descArray[i] || files[i].originalname || "Document",
+            date: new Date().toISOString(),
+        });
+    }
+
+    // Append new document objects to the existing array
     const updatedCompany = await Company.findByIdAndUpdate(
         id,
         {
             $push: {
-                documents: { $each: fileKeys } // Appends all new URLs to the existing array
+                documents: { $each: documentObjects }
             }
         },
         {
@@ -183,7 +203,7 @@ const addDocumentsHandler = async (req: AuthRequest, res: Response) => {
         id,
         {
             $pull: {
-                documents: Fileurl // Tells MongoDB: "Find this exact string in the array and delete it"
+                documents: { link: Fileurl } // Match the document object by its link field
             }
         },
         {

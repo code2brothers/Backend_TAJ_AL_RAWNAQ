@@ -49,7 +49,7 @@ const sendEmailHandler = async (req: AuthRequest, res: Response) => {
                     <tr>
                         <td style="background-color: #0f172a; padding: 30px 40px; text-align: center;">
                             <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 600; letter-spacing: 0.5px;">New System Inquiry</h1>
-                            <p style="color: #94a3b8; margin: 10px 0 0 0; font-size: 14px;">BitCare / Manpower Management System</p>
+                            <p style="color: #94a3b8; margin: 10px 0 0 0; font-size: 14px;">Taj Al Rawnaq</p>
                         </td>
                     </tr>
 
