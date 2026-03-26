@@ -38,7 +38,7 @@ const addPaymentHandler = async (req: AuthRequest, res: Response) => {
     // ==========================================
     const existingPayment = await CompanyPaymentToOwner.findOne({
         company_id,
-        month,
+        month : (month as string).charAt(0).toUpperCase() + (month as string).slice(1).toLowerCase(),
         year
     });
 
@@ -67,7 +67,7 @@ const addPaymentHandler = async (req: AuthRequest, res: Response) => {
             dataEnteredBY: req.user?._id,      // The Staff Member from verifyJWT
             amount,
             dateofPayment: dateofPayment || new Date(),
-            month,                             // FIXED: Removed .toLowerCase() to match Dashboard logic
+            month : (month as string).charAt(0).toUpperCase() + (month as string).slice(1).toLowerCase(),                             // FIXED: Removed .toLowerCase() to match Dashboard logic
             year,
             paymentMode,
             transactionId,
@@ -158,7 +158,7 @@ const addPaymentHandler = async (req: AuthRequest, res: Response) => {
 
     const matchFilter : any ={year:year as string};
     if(month){
-        matchFilter.month = (month as string).toLowerCase();
+        matchFilter.month = (month as string).charAt(0).toUpperCase() + (month as string).slice(1).toLowerCase();
     }
     
     // 2. The MongoDB Aggregation Pipeline
