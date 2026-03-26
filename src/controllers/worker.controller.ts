@@ -3,9 +3,9 @@ import { Response } from "express";
 import { ApiError } from "../utils/ApiError.js";
 import { Worker } from "../models/worker.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
-import {multerS3File} from "../constants.js";
-import {deleteFileFromCloudFlare, getFileUrl} from "../utils/cloudflare.js";
-import {CompanyPaymentToOwner} from "../models/companyPaymentToOwner_Monthly.model.js";
+import { multerS3File } from "../constants.js";
+import { deleteFileFromCloudFlare, getFileUrl } from "../utils/cloudflare.js";
+import { CompanyPaymentToOwner } from "../models/companyPaymentToOwner_Monthly.model.js";
 
 const addNewWorkerHandler = async (req: AuthRequest, res: Response) => {
     const { visaNumber, name, passportNumber, ...restData } = req.body;
@@ -29,7 +29,7 @@ const addNewWorkerHandler = async (req: AuthRequest, res: Response) => {
         visaNumber,
         name,
         passportNumber,
-        documents:url,
+        documents: url,
         ...restData
     });
 
@@ -40,12 +40,13 @@ const addNewWorkerHandler = async (req: AuthRequest, res: Response) => {
 
 const viewAllWorkerHandler = async (req: AuthRequest, res: Response) => {
     // Fetches all workers and sorts them so the newest additions appear first
-    const workers = await Worker.find().sort({ createdAt: -1 });
+    const workers = await Worker.find().sort({ visaExpiry: 1 });
 
     return res
         .status(200)
         .json(new ApiResponse(200, workers, "All workers fetched successfully"));
 };
+
 
 
 const viewOneWorkerHandler = async (req: AuthRequest, res: Response) => {
@@ -287,5 +288,6 @@ export {
     updateWorkerdetailsHandler,
     viewAllWorkerHandler,
     viewOneWorkerHandler,
+    
     // updatedocumentHandler
 };
