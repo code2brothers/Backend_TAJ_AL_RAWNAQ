@@ -12,6 +12,7 @@ import companyPaymentToOwner_MonthlyRouter from "./routes/companyPaymentToOwner_
 import CompanyExpenditureRouter from "./routes/companyExpenditure.route.js"
 import ownerPaymentToWorker_MonthlyRouter from "./routes/ownerPaymentToWorker_MonthlyRouter.route.js"
 import company_OverviewRouter from "./routes/company_Overview.route.js"
+import contactRouter from "./routes/contact.router.js";
 
 const app = express();
 app.use(express.json({limit:"16kb"}))
@@ -31,6 +32,7 @@ app.use(express.static("public"))
 // ALL ROUTES
 app.use("/api/v1/testing",testingRoute)
 app.use("/api/v1/user",userRouter)
+app.use("/api/v1/contact",contactRouter)
 
 app.use(verifyJwt)
 
