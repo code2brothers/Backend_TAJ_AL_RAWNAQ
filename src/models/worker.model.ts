@@ -5,7 +5,6 @@ export interface IWorker extends Document {
     name: string;
     fatherName: string;
     contactNo: string[];
-    age: number;
     passportNumber: string;
     passportIssueDate: Date;
     passportExpiryDate: Date;
@@ -34,11 +33,7 @@ const workerSchema = new Schema<IWorker>(
         name: { type: String, required: [true, "Worker name is required."], trim: true },
         fatherName: { type: String, required: [true, "Father's name is required."] },
         contactNo: [{ type: String }],
-        age: {
-            type: Number,
-            required: [true, "Age is required."],
-            min: [18, "Worker must be at least 18 years old."]
-        },
+
         passportNumber: { type: String, required: [true, "Passport Number is required."], unique: true, trim: true },
         passportIssueDate: { type: Date, required: [true, "Passport Issue Date is required."] },
         passportExpiryDate: { type: Date, required: [true, "Passport Expiry Date is required."] },
