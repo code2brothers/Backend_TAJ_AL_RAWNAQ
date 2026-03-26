@@ -17,7 +17,7 @@ import contactRouter from "./routes/contact.router.js";
 const app = express();
 app.use(express.json({limit:"16kb"}))
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || "http://localhost:3000",
+  origin: process.env.CORS_ORIGIN || "https://taj-al-rawnaqq.vercel.app",
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
