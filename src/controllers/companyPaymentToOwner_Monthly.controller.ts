@@ -225,7 +225,8 @@ const addPaymentHandler = async (req: AuthRequest, res: Response) => {
         .json(new ApiResponse(200, monthlyPayments, `Payments for ${month} ${year} fetched successfully`));
 };
 
-const updatePaymentdetailsHandler = async (req: AuthRequest, res: Response) => {
+
+ const updatePaymentdetailsHandler = async (req: AuthRequest, res: Response) => {
     // We explicitly extract paymentProof so we know if they are trying to replace the old file!
     const { _id, paymentProof, ...updateData } = req.body;
     const file = req.file as multerS3File;
@@ -340,7 +341,8 @@ const updatePaymentdetailsHandler = async (req: AuthRequest, res: Response) => {
         throw new ApiError(statusCode, err.message || "Failed to update payment details.");
     }
 };
-//  const updatePaymentdetailsHandler = async (req: AuthRequest, res: Response) => {
+
+ //  const updatePaymentdetailsHandler = async (req: AuthRequest, res: Response) => {
 //     const { _id, ...updateData } = req.body;
 //
 //     if (!_id) {
