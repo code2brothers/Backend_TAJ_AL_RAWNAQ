@@ -51,7 +51,7 @@ const addNewCompanyHandler = async (req: AuthRequest, res: Response) => {
 const viewAllCompanyHandler = async (req: AuthRequest, res: Response) => {
     // Use .lean() to get raw MongoDB data — avoids Mongoose subdocument casting issues
     // when documents array has mixed formats (old plain strings + new objects)
-    const companies = await Company.find().sort({ createdAt: -1 }).lean();
+    const companies = await Company.find().sort({ companyName: 1 }).lean();
 
     return res
         .status(200)
