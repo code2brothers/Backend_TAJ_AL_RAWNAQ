@@ -22,6 +22,7 @@ import {deleteFileFromCloudFlare, getFileUrl} from "../utils/cloudflare.js";
         remarks
     } = req.body;
 
+
     const file = req.file as multerS3File;
 
     // ==========================================
@@ -60,12 +61,14 @@ import {deleteFileFromCloudFlare, getFileUrl} from "../utils/cloudflare.js";
     // We successfully found the worker, so we extract their hidden MongoDB _id
     const worker_id = worker._id;
 
+
+
     // ==========================================
     // 3. DUPLICATE CHECK
     // ==========================================
     const existingPayment = await OwnerPaymentToWorker.findOne({
         worker_id, // <--- Use the extracted ID here
-        month,
+        month:(month as string).charAt(0).toUpperCase() + (month as string).slice(1).toLowerCase(),
         year
     });
 
@@ -91,7 +94,7 @@ import {deleteFileFromCloudFlare, getFileUrl} from "../utils/cloudflare.js";
             worker_id, // <--- Save the extracted MongoDB ID to maintain database relationships
             dataEnteredBY: req.user?._id,
             dateofPayment: dateofPayment || new Date(),
-            month,
+            month : (month as string).charAt(0).toUpperCase() + (month as string).slice(1).toLowerCase(),
             year,
             transactionId,
             totalHours,
@@ -179,7 +182,7 @@ const viewAllPaymentHandler = async (req: AuthRequest, res: Response) => {
     // Year is always required; month is optional
     const matchFilter: any = { year: year as string };
     if (month) {
-        matchFilter.month = (month as string).toLowerCase();
+        matchFilter.month = (month as string).charAt(0).toUpperCase() + (month as string).slice(1).toLowerCase();
     }
     if (visaNumber) {
        const worker = await Worker.findOne({visaNumber:visaNumber as string}).lean()
