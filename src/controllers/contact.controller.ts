@@ -5,7 +5,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import nodemailer from "nodemailer";
 
 const sendEmailHandler = async (req: AuthRequest, res: Response) => {
-    const { Name, Email, Phone, Company_Name, message } = req.body;
+    const { Name, Email, Phone, Purpose, message } = req.body;
 
     if (!Name || !Email || !Phone || !message) {
         throw new ApiError(
@@ -76,8 +76,8 @@ const sendEmailHandler = async (req: AuthRequest, res: Response) => {
                                     <td style="padding: 15px; border-bottom: 1px solid #e2e8f0; color: #334155;">${Phone}</td>
                                 </tr>
                                 <tr>
-                                    <td style="padding: 15px; font-weight: 600; color: #1e293b;">Company</td>
-                                    <td style="padding: 15px; color: #334155;">${Company_Name || "<span style='color: #94a3b8; font-style: italic;'>Not Provided</span>"}</td>
+                                    <td style="padding: 15px; font-weight: 600; color: #1e293b;">Purpose</td>
+                                    <td style="padding: 15px; color: #334155;">${Purpose || "<span style='color: #94a3b8; font-style: italic;'>Not Provided</span>"}</td>
                                 </tr>
                             </table>
 
@@ -115,7 +115,7 @@ const sendEmailHandler = async (req: AuthRequest, res: Response) => {
         const mailOptions = {
             from: process.env.SENDER,
             to: process.env.RECIEVER, // The email address where YOU want to receive these messages
-            subject: `New Inquiry from ${Name} - ${Company_Name || "Independent"}`,
+            subject: `New Inquiry from ${Name} - ${Purpose || "General Inquiry"}`,
             html: htmlTemplate,
             replyTo: process.env.SENDER, // If you hit "Reply" in Gmail, it goes straight to the customer!
         };
