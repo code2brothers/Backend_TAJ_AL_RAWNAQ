@@ -26,6 +26,10 @@ export interface IWorker extends Document {
     d?: string;
     e?: string;
     documents?: string; // 3rd party URL
+
+    parentCompany: string;
+    referBy: string;
+
 }
 const workerSchema = new Schema<IWorker>(
     {
@@ -63,6 +67,9 @@ const workerSchema = new Schema<IWorker>(
         is_Active: { type: Boolean, default: true },
         a: { type: String }, b: { type: String }, c: { type: String }, d: { type: String }, e: { type: String },
         documents: { type: String },
+        parentCompany: { type: String, required: [true, "parent Company is required."], trim: true },
+        referBy: { type: String, required: [true, "referBy is required."], trim: true },
+        
     },
     { timestamps: true }
 );

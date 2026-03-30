@@ -26,7 +26,7 @@ router
     .route("/viewAllWorker")
     .get(viewAllWorkerHandler)
 router
-    .route("/viewOneWorker/:visaNumber")
+    .route("/viewOneWorker/:passportNumber")
     .get(viewOneWorkerHandler)
 
 router.use(verifyAdmin)

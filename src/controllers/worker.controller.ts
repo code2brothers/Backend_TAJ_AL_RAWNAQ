@@ -9,35 +9,67 @@ import { CompanyPaymentToOwner } from "../models/companyPaymentToOwner_Monthly.m
 
 const addNewWorkerHandler = async (req: AuthRequest, res: Response) => {
     const { visaNumber, name, passportNumber, ...restData } = req.body;
-    // Basic validation
+
+    // 🔥 Extract the file FIRST so we can clean it up if validations fail
+    const file = req.file as multerS3File;
+
+    // ==========================================
+    // 1. EARLY VALIDATION
+    // ==========================================
     if (!visaNumber || !name) {
+        if (file) {
+            deleteFileFromCloudFlare(file.key).catch(e => console.error("Cleanup error:", e));
+        }
         throw new ApiError(400, "Visa Number and Name are required to add a new worker!");
     }
 
-    //  prevent database duplicates
+    // ==========================================
+    // 2. DUPLICATE CHECK
+    // ==========================================
     const existingWorker = await Worker.findOne({ visaNumber });
     if (existingWorker) {
+        if (file) {
+            deleteFileFromCloudFlare(file.key).catch(e => console.error("Cleanup error on duplicate:", e));
+        }
         throw new ApiError(409, "A worker with this Visa Number already exists in the system.");
     }
 
-    const file = req.file as multerS3File;
-    const key = file.key;
-    const url = await getFileUrl(key);
+    // ==========================================
+    // 3. SAFE EXECUTION
+    // ==========================================
+    try {
+        
 
-    // Create the new worker
-    const newWorker = await Worker.create({
-        visaNumber,
-        name,
-        passportNumber,
-        documents: url,
-        ...restData
-    });
+        // Only generate the URL if a file was actually uploaded
 
-    return res
-        .status(201)
-        .json(new ApiResponse(201, newWorker, "Worker successfully added to the system"));
+          const  url = await getFileUrl(file.key);
+
+
+        // Create the new worker
+        const newWorker = await Worker.create({
+            visaNumber,
+            name,
+            passportNumber,
+            documents: url, // Safely applies the URL or an empty string
+            ...restData
+        });
+
+        return res
+            .status(201)
+            .json(new ApiResponse(201, newWorker, "Worker successfully added to the system"));
+
+    } catch (err: any) {
+        // ==========================================
+        // 4. SAFE CLEANUP (If database crashes)
+        // ==========================================
+        if (file) {
+            console.log("Database error. Deleting orphaned worker document:", file.key);
+            deleteFileFromCloudFlare(file.key).catch(e => console.error("Cleanup failed:", e));
+        }
+
+        throw new ApiError(400, err.message || "Failed to add new worker.");
+    }
 };
-
 const viewAllWorkerHandler = async (req: AuthRequest, res: Response) => {
     // Fetches all workers and sorts them so the newest additions appear first
     const workers = await Worker.find().sort({ visaExpiry: 1 });
@@ -51,13 +83,13 @@ const viewAllWorkerHandler = async (req: AuthRequest, res: Response) => {
 
 const viewOneWorkerHandler = async (req: AuthRequest, res: Response) => {
     // Assuming you set up your route like this: router.get("/:visaNumber", viewOneWorkerHandler)
-    const { visaNumber } = req.params;
+    const { passportNumber } = req.params;
 
-    if (!visaNumber) {
-        throw new ApiError(400, "Please provide a Visa Number to search for.");
+    if (!passportNumber) {
+        throw new ApiError(400, "Please provide a passport  Number to search for.");
     }
 
-    const worker = await Worker.findOne({ visaNumber });
+    const worker = await Worker.findOne({ passportNumber });
 
     if (!worker) {
         throw new ApiError(404, "Worker does not exist with the provided Visa Number.");
