@@ -29,6 +29,8 @@ export interface IWorker extends Document {
 
     parentCompany: string;
     referBy: string;
+    campNumber :string;
+    Nationaliy :string;
 
 }
 const workerSchema = new Schema<IWorker>(
@@ -69,6 +71,8 @@ const workerSchema = new Schema<IWorker>(
         documents: { type: String },
         parentCompany: { type: String, required: [true, "parent Company is required."], trim: true },
         referBy: { type: String, required: [true, "referBy is required."], trim: true },
+        Nationaliy: { type: String, required: [true, "referBy is required."], trim: true },
+        campNumber: { type: String },
         
     },
     { timestamps: true }

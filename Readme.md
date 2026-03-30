@@ -45,3 +45,5 @@ addmoredocuments and delte in worker
 in toowner ke add me paymentproof compulsary hai to baki ki toworker  ke add route me compulsary rahegi ya nhi 
 
 
+company aur employee , worker me dp add karna hai
+
