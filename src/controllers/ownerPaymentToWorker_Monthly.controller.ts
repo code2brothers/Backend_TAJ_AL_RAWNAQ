@@ -175,7 +175,7 @@ import {deleteFileFromCloudFlare, getFileUrl} from "../utils/cloudflare.js";
 
 const viewAllPaymentHandler = async (req: AuthRequest, res: Response) => {
     // 1. We take month and year from req.query (e.g., ?year=2026 or ?month=march&year=2026)
-    const { month, year,visaNumber } = req.query;
+    const { month, year,passportNumber } = req.query;
 
     if (!year) {
         throw new ApiError(400, "Please provide at least a year to view payment info.");
@@ -187,8 +187,8 @@ const viewAllPaymentHandler = async (req: AuthRequest, res: Response) => {
     if (month) {
         matchFilter.month = (month as string).charAt(0).toUpperCase() + (month as string).slice(1).toLowerCase();
     }
-    if (visaNumber) {
-       const worker = await Worker.findOne({visaNumber:visaNumber as string}).lean()
+    if (passportNumber) {
+       const worker = await Worker.findOne({passportNumber:passportNumber as string}).lean()
        if(!worker){
             throw new ApiError(404,"Worker not found")
         }
