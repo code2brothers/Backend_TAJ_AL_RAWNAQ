@@ -21,6 +21,7 @@ export interface IUser extends Document {
         | "MANAGE_COMPANY"
         )[];
     is_Active: boolean;
+    picture?: string;
     refreshToken?: string;
     // Note: 'id', 'createdAt', and 'updatedAt' are handled automatically by Mongoose
 }
@@ -81,6 +82,9 @@ const userSchema = new Schema<IUser, UserModel, IUserMethods>({
     is_Active: {
         type: Boolean,
         default: true // Users are active by default when created
+    },
+    picture: {
+        type: String
     },
     refreshToken: {
         type: String

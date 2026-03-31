@@ -21,7 +21,7 @@ router.use(verifyAccess("MANAGE_WORKERS"))
 
 router
     .route("/addNewWorker")
-    .post(uploadOnCloudFlare.single("documents"),addNewWorkerHandler)
+    .post(uploadOnCloudFlare.fields([{name: "documents", maxCount: 1}, {name: "picture", maxCount: 1}]),addNewWorkerHandler)
 router
     .route("/viewAllWorker")
     .get(viewAllWorkerHandler)
@@ -33,7 +33,7 @@ router.use(verifyAdmin)
 
 router
     .route("/updateWorkerdetails")
-    .patch(uploadOnCloudFlare.single("newdocument"),updateWorkerdetailsHandler)
+    .patch(uploadOnCloudFlare.fields([{name: "newdocument", maxCount: 1}, {name: "picture", maxCount: 1}]),updateWorkerdetailsHandler)
 // router
 //     .route("/updatedocument")
 //     .patch(uploadOnCloudFlare.single("newdocument"),updatedocumentHandler)

@@ -10,47 +10,45 @@ import { CompanyPaymentToOwner } from "../models/companyPaymentToOwner_Monthly.m
 const addNewWorkerHandler = async (req: AuthRequest, res: Response) => {
     const { visaNumber, name, passportNumber, ...restData } = req.body;
 
-    // 🔥 Extract the file FIRST so we can clean it up if validations fail
-    const file = req.file as multerS3File;
+    // 🔥 Extract files FIRST so we can clean them up if validations fail
+    const files = req.files as { [fieldname: string]: multerS3File[] } | undefined;
+    const docFile = files?.documents?.[0];
+    const picFile = files?.picture?.[0];
 
     // ==========================================
     // 1. EARLY VALIDATION
     // ==========================================
     if (!visaNumber || !name) {
-        if (file) {
-            deleteFileFromCloudFlare(file.key).catch(e => console.error("Cleanup error:", e));
-        }
+        if (docFile) deleteFileFromCloudFlare(docFile.key).catch(e => console.error("Cleanup error:", e));
+        if (picFile) deleteFileFromCloudFlare(picFile.key).catch(e => console.error("Cleanup error:", e));
         throw new ApiError(400, "Visa Number and Name are required to add a new worker!");
     }
 
     // ==========================================
     // 2. DUPLICATE CHECK
     // ==========================================
-    const existingWorker = await Worker.findOne({ visaNumber });
+    const existingWorker = await Worker.findOne({ passportNumber });
     if (existingWorker) {
-        if (file) {
-            deleteFileFromCloudFlare(file.key).catch(e => console.error("Cleanup error on duplicate:", e));
-        }
-        throw new ApiError(409, "A worker with this Visa Number already exists in the system.");
+        if (docFile) deleteFileFromCloudFlare(docFile.key).catch(e => console.error("Cleanup error on duplicate:", e));
+        if (picFile) deleteFileFromCloudFlare(picFile.key).catch(e => console.error("Cleanup error on duplicate:", e));
+        throw new ApiError(409, "A worker with this Passport Number already exists in the system.");
     }
 
     // ==========================================
     // 3. SAFE EXECUTION
     // ==========================================
     try {
-        
-
-        // Only generate the URL if a file was actually uploaded
-
-          const  url = await getFileUrl(file.key);
-
+        // Generate URLs for uploaded files
+        const docUrl = docFile ? await getFileUrl(docFile.key) : undefined;
+        const picUrl = picFile ? await getFileUrl(picFile.key) : undefined;
 
         // Create the new worker
         const newWorker = await Worker.create({
             visaNumber,
             name,
             passportNumber,
-            documents: url, // Safely applies the URL or an empty string
+            ...(docUrl && { documents: docUrl }),
+            ...(picUrl && { picture: picUrl }),
             ...restData
         });
 
@@ -62,9 +60,13 @@ const addNewWorkerHandler = async (req: AuthRequest, res: Response) => {
         // ==========================================
         // 4. SAFE CLEANUP (If database crashes)
         // ==========================================
-        if (file) {
-            console.log("Database error. Deleting orphaned worker document:", file.key);
-            deleteFileFromCloudFlare(file.key).catch(e => console.error("Cleanup failed:", e));
+        if (docFile) {
+            console.log("Database error. Deleting orphaned worker document:", docFile.key);
+            deleteFileFromCloudFlare(docFile.key).catch(e => console.error("Cleanup failed:", e));
+        }
+        if (picFile) {
+            console.log("Database error. Deleting orphaned worker picture:", picFile.key);
+            deleteFileFromCloudFlare(picFile.key).catch(e => console.error("Cleanup failed:", e));
         }
 
         throw new ApiError(400, err.message || "Failed to add new worker.");
@@ -101,27 +103,21 @@ const viewOneWorkerHandler = async (req: AuthRequest, res: Response) => {
 };
 
 const updateWorkerdetailsHandler = async (req: AuthRequest, res: Response) => {
-    // We explicitly extract paymentProof so we know if they are trying to replace the old file!
-    const { _id, documents, ...updateData } = req.body;
-    const file = req.file as multerS3File;
+    const { _id, ...updateData } = req.body;
+    const files = req.files as { [fieldname: string]: multerS3File[] } | undefined;
+    const docFile = files?.newdocument?.[0];
+    const picFile = files?.picture?.[0];
 
     // ==========================================
     // 1. EARLY VALIDATION
     // ==========================================
     if (!_id) {
-        if (file) {
-            deleteFileFromCloudFlare(file.key).catch(e => console.error("Cleanup error:", e));
-        }
-        throw new ApiError(400, "Provide the payment _id to update its details.");
+        if (docFile) deleteFileFromCloudFlare(docFile.key).catch(e => console.error("Cleanup error:", e));
+        if (picFile) deleteFileFromCloudFlare(picFile.key).catch(e => console.error("Cleanup error:", e));
+        throw new ApiError(400, "Provide the worker _id to update its details.");
     }
 
-    // Prevent the "Broken Link" trap: Old URL provided but no new file uploaded
-    if (documents && !file) {
-        throw new ApiError(400, "You provided an old document to replace, but forgot to upload the new file.");
-    }
-
-    // Allow the request if they are at least sending a new file
-    if (Object.keys(updateData).length === 0 && !file) {
+    if (Object.keys(updateData).length === 0 && !docFile && !picFile) {
         throw new ApiError(400, "Provide at least one field or a new file to update.");
     }
 
@@ -129,25 +125,50 @@ const updateWorkerdetailsHandler = async (req: AuthRequest, res: Response) => {
     // 2. MAIN EXECUTION BLOCK
     // ==========================================
     try {
-        // Safe Old File Deletion (Non-Blocking)
-        if (documents) {
-            try {
-                const domain = process.env.PUBLICDOMAIN as string;
-                if (documents.includes(domain)) {
-                    const oldkey = (documents as string).split(`${domain}/`)[1];
-                    if (oldkey) {
-                        deleteFileFromCloudFlare(oldkey).catch(e => console.error("Failed to delete old file:", e));
-                    }
-                }
-            } catch (cleanupError) {
-                console.error("Cloudflare URL Parse Error:", cleanupError);
-            }
+        // Fetch existing worker to get old file URLs
+        const existingWorker = await Worker.findById(_id);
+        if (!existingWorker) {
+            if (docFile) deleteFileFromCloudFlare(docFile.key).catch(e => console.error("Cleanup error:", e));
+            if (picFile) deleteFileFromCloudFlare(picFile.key).catch(e => console.error("Cleanup error:", e));
+            throw new ApiError(404, "Worker does not exist with the provided ID.");
         }
 
-        // Process New File
-        if (file) {
-            const documentsUrl = await getFileUrl(file.key);
+        const domain = process.env.PUBLICDOMAIN as string;
+
+        // If new document uploaded, delete old document from Cloudflare
+        if (docFile) {
+            if (existingWorker.documents) {
+                try {
+                    if (existingWorker.documents.includes(domain)) {
+                        const oldkey = existingWorker.documents.split(`${domain}/`)[1];
+                        if (oldkey) {
+                            deleteFileFromCloudFlare(oldkey).catch(e => console.error("Failed to delete old document:", e));
+                        }
+                    }
+                } catch (cleanupError) {
+                    console.error("Cloudflare URL Parse Error:", cleanupError);
+                }
+            }
+            const documentsUrl = await getFileUrl(docFile.key);
             updateData.documents = documentsUrl;
+        }
+
+        // If new picture uploaded, delete old picture from Cloudflare
+        if (picFile) {
+            if (existingWorker.picture) {
+                try {
+                    if (existingWorker.picture.includes(domain)) {
+                        const oldPicKey = existingWorker.picture.split(`${domain}/`)[1];
+                        if (oldPicKey) {
+                            deleteFileFromCloudFlare(oldPicKey).catch(e => console.error("Failed to delete old picture:", e));
+                        }
+                    }
+                } catch (cleanupError) {
+                    console.error("Cloudflare Picture URL Parse Error:", cleanupError);
+                }
+            }
+            const pictureUrl = await getFileUrl(picFile.key);
+            updateData.picture = pictureUrl;
         }
 
         // =======================================================
@@ -156,7 +177,6 @@ const updateWorkerdetailsHandler = async (req: AuthRequest, res: Response) => {
         const forbiddenFields = [
             "createdAt",
             "updatedAt"
-            // Notice: 'paymentProof' was removed from this list so the URL can be updated!
         ];
 
         forbiddenFields.forEach((field) => {
@@ -191,10 +211,6 @@ const updateWorkerdetailsHandler = async (req: AuthRequest, res: Response) => {
             }
         );
 
-        if (!updatedWorker) {
-            throw new ApiError(404, "Worker does not exist with the provided ID.");
-        }
-
         return res
             .status(200)
             .json(new ApiResponse(200, updatedWorker, "Worker details updated successfully"));
@@ -203,13 +219,17 @@ const updateWorkerdetailsHandler = async (req: AuthRequest, res: Response) => {
         // ==========================================
         // 3. CENTRALIZED CLEANUP
         // ==========================================
-        if (file) {
-            console.log("Database error. Deleting orphaned newly uploaded file:", file.key);
-            deleteFileFromCloudFlare(file.key).catch(e => console.error("Cleanup failed:", e));
+        if (docFile) {
+            console.log("Database error. Deleting orphaned newly uploaded document:", docFile.key);
+            deleteFileFromCloudFlare(docFile.key).catch(e => console.error("Cleanup failed:", e));
+        }
+        if (picFile) {
+            console.log("Database error. Deleting orphaned newly uploaded picture:", picFile.key);
+            deleteFileFromCloudFlare(picFile.key).catch(e => console.error("Cleanup failed:", e));
         }
 
         const statusCode = err.statusCode || 400;
-        throw new ApiError(statusCode, err.message || "Failed to update payment details.");
+        throw new ApiError(statusCode, err.message || "Failed to update worker details.");
     }
 };
 

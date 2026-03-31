@@ -15,6 +15,7 @@ export interface ICompany extends Document {
     address: string;
     contactPerson: string;
     documents: ICompanyDocument[];
+    picture?: string;
 }
 
 const companySchema = new Schema<ICompany>(
@@ -48,6 +49,9 @@ const companySchema = new Schema<ICompany>(
         contactPerson: {
             type: String,
             required: [true, "Contact person name is required."]
+        },
+        picture: {
+            type: String
         },
         documents: [
             {

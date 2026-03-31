@@ -16,7 +16,6 @@ const addNewCompanyHandler = async (req: AuthRequest, res: Response) => {
     }
 
     // Check for duplicates to prevent database pollution
-    // (Assuming company names or registration numbers should be unique)
     const existingCompany = await Company.findOne({
         $or: [{ companyName }, { registrationNo: registrationNo || null }]
     });
@@ -24,9 +23,15 @@ const addNewCompanyHandler = async (req: AuthRequest, res: Response) => {
     if (existingCompany) {
         throw new ApiError(409, "A company with this Name or Registration Number already exists.");
     }
-    // Process uploaded files into document objects
+
+    // Extract files — documents array + optional picture
+    const filesMap = req.files as { [fieldname: string]: multerS3File[] } | undefined;
+    const docFiles = filesMap?.documents || [];
+    const picFile = filesMap?.picture?.[0];
+
+    // Process uploaded document files into document objects
     const documentObjects = [];
-    for (const value of (req.files as multerS3File[])) {
+    for (const value of docFiles) {
         const fileUrl = await getFileUrl(value.key);
         documentObjects.push({
             link: fileUrl,
@@ -35,11 +40,15 @@ const addNewCompanyHandler = async (req: AuthRequest, res: Response) => {
         });
     }
 
+    // Process picture
+    const pictureUrl = picFile ? await getFileUrl(picFile.key) : undefined;
+
     // Create the company
     const newCompany = await Company.create({
         companyName,
         registrationNo,
         documents: documentObjects,
+        ...(pictureUrl && { picture: pictureUrl }),
         ...restData
     });
 
@@ -71,13 +80,41 @@ const viewAllCompanywithName_IdHandler = async (req: AuthRequest, res: Response)
 
 const updateCompanydetailsHandler = async (req: AuthRequest, res: Response) => {
     const { _id, ...updateData } = req.body;
+    const picFile = req.file as multerS3File | undefined;
 
     if (!_id) {
+        if (picFile) deleteFileFromCloudFlare(picFile.key).catch(e => console.error("Cleanup error:", e));
         throw new ApiError(400, "Provide the company's _id to update its details.");
     }
 
-    if (Object.keys(updateData).length === 0) {
+    if (Object.keys(updateData).length === 0 && !picFile) {
         throw new ApiError(400, "Provide at least one field to update.");
+    }
+
+    // Fetch existing company to get old picture URL
+    const existingCompany = await Company.findById(_id);
+    if (!existingCompany) {
+        if (picFile) deleteFileFromCloudFlare(picFile.key).catch(e => console.error("Cleanup error:", e));
+        throw new ApiError(404, "Company does not exist with the provided ID.");
+    }
+
+    // If new picture uploaded, delete old picture from Cloudflare
+    if (picFile) {
+        if (existingCompany.picture) {
+            try {
+                const domain = process.env.PUBLICDOMAIN as string;
+                if (existingCompany.picture.includes(domain)) {
+                    const oldPicKey = existingCompany.picture.split(`${domain}/`)[1];
+                    if (oldPicKey) {
+                        deleteFileFromCloudFlare(oldPicKey).catch(e => console.error("Failed to delete old picture:", e));
+                    }
+                }
+            } catch (cleanupError) {
+                console.error("Cloudflare Picture URL Parse Error:", cleanupError);
+            }
+        }
+        const pictureUrl = await getFileUrl(picFile.key);
+        updateData.picture = pictureUrl;
     }
 
     // Security: The Forbidden List
@@ -97,9 +134,9 @@ const updateCompanydetailsHandler = async (req: AuthRequest, res: Response) => {
 
         // Strict Null Checking
         if (value === null) {
-            unsetQuery[key] = 1; // Mark for complete deletion
+            unsetQuery[key] = 1;
         } else {
-            setQuery[key] = value; // Mark for update/creation
+            setQuery[key] = value;
         }
     }
 
@@ -116,10 +153,6 @@ const updateCompanydetailsHandler = async (req: AuthRequest, res: Response) => {
             runValidators: true
         }
     );
-
-    if (!updatedCompany) {
-        throw new ApiError(404, "Company does not exist with the provided ID.");
-    }
 
     return res
         .status(200)

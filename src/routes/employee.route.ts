@@ -6,6 +6,7 @@ import {
     viewAllEmployeeHandler
 } from "../controllers/employee.controller.js";
 import { verifyAccess, verifyAdmin} from "../middleware/verifyAccess.middleware.js";
+import {uploadOnCloudFlare} from "../middleware/uploadonCloudFlare.middleware.js";
 
 const router = Router()
 
@@ -18,7 +19,7 @@ router.use(verifyAccess("MANAGE_EMPLOYEES"))
 
 router
     .route("/addNewEmployee")
-    .post(addNewEmployeeHandler)
+    .post(uploadOnCloudFlare.single("picture"),addNewEmployeeHandler)
 router
     .route("/viewAllEmployee")
     .get(viewAllEmployeeHandler)
@@ -27,7 +28,7 @@ router
 router.use(verifyAdmin)
 router
     .route("/updateEmployeeDetails")
-    .patch(updateEmployeedetailsHandler)
+    .patch(uploadOnCloudFlare.single("picture"),updateEmployeedetailsHandler)
 
 
 export default router
