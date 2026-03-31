@@ -71,8 +71,14 @@ const addNewWorkerHandler = async (req: AuthRequest, res: Response) => {
     }
 };
 const viewAllWorkerHandler = async (req: AuthRequest, res: Response) => {
-    // Fetches all workers and sorts them so the newest additions appear first
-    const workers = await Worker.find().sort({ visaExpiry: 1 });
+    const { passportNumber } = req.query;
+
+    const filter: any = {};
+    if (passportNumber && typeof passportNumber === "string" && passportNumber.trim()) {
+        filter.passportNumber = { $regex: passportNumber.trim(), $options: "i" };
+    }
+
+    const workers = await Worker.find(filter).sort({ visaExpiry: 1 });
 
     return res
         .status(200)
