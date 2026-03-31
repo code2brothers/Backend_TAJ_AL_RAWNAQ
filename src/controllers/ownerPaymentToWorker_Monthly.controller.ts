@@ -10,7 +10,7 @@ import {deleteFileFromCloudFlare, getFileUrl} from "../utils/cloudflare.js";
 
  const addPaymentHandler = async (req: AuthRequest, res: Response) => {
     const {
-        visaNumber, // <--- Replaced worker_id with visaNumber
+        passportNumber, // <--- Use passportNumber to look up workers
         dateofPayment,
         transactionId,
         month,
@@ -30,7 +30,7 @@ import {deleteFileFromCloudFlare, getFileUrl} from "../utils/cloudflare.js";
     // 1. EARLY VALIDATION
     // ==========================================
     if (
-        !visaNumber || // <--- Validate visaNumber instead
+        !passportNumber || // <--- Validate passportNumber
         !transactionId ||
         !month ||
         !year ||
@@ -43,21 +43,21 @@ import {deleteFileFromCloudFlare, getFileUrl} from "../utils/cloudflare.js";
         if (file) {
             deleteFileFromCloudFlare(file.key).catch(e => console.error("Cleanup error:", e));
         }
-        throw new ApiError(400, "Please provide the visa number and all required payment details.");
+        throw new ApiError(400, "Please provide the passport number and all required payment details.");
     }
 
     // ==========================================
     // 2. WORKER LOOKUP (The "Magic" Step)
     // ==========================================
-    // Find the worker by their human-readable Visa Number
-    const worker = await Worker.findOne({ visaNumber });
+    // Find the worker by their human-readable Passport Number
+    const worker = await Worker.findOne({ passportNumber });
 
     if (!worker) {
         if (file) {
-            // Delete the uploaded receipt if the data-entry person typed the wrong Visa Number!
+            // Delete the uploaded receipt if the data-entry person typed the wrong Passport Number!
             deleteFileFromCloudFlare(file.key).catch(e => console.error("Cleanup error on missing worker:", e));
         }
-        throw new ApiError(404, `No worker found in the system with Visa Number: ${visaNumber}`);
+        throw new ApiError(404, `No worker found in the system with Passport Number: ${passportNumber}`);
     }
 
     // We successfully found the worker, so we extract their hidden MongoDB _id
@@ -78,7 +78,7 @@ import {deleteFileFromCloudFlare, getFileUrl} from "../utils/cloudflare.js";
         if (file) {
             deleteFileFromCloudFlare(file.key).catch(e => console.error("Cleanup error on duplicate:", e));
         }
-        throw new ApiError(409, `A payment for this worker (Visa: ${visaNumber}) in ${month} ${year} has already been recorded!`);
+        throw new ApiError(409, `A payment for this worker (Passport: ${passportNumber}) in ${month} ${year} has already been recorded!`);
     }
 
     // ==========================================
@@ -110,7 +110,7 @@ import {deleteFileFromCloudFlare, getFileUrl} from "../utils/cloudflare.js";
 
         return res
             .status(201)
-            .json(new ApiResponse(201, newPayment, `Payment recorded successfully for Visa: ${visaNumber}`));
+            .json(new ApiResponse(201, newPayment, `Payment recorded successfully for Passport: ${passportNumber}`));
 
     } catch (err: any) {
         if (file) {
