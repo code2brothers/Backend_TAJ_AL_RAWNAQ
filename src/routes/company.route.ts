@@ -20,7 +20,7 @@ router.use(verifyAccess("MANAGE_COMPANY"))
 
 router
     .route("/addNewCompany")
-    .post(uploadOnCloudFlare.array("documents"),addNewCompanyHandler)
+    .post(uploadOnCloudFlare.fields([{name: "documents"}, {name: "picture", maxCount: 1}]),addNewCompanyHandler)
 router
     .route("/viewAllCompany")
     .get(viewAllCompanyHandler)
@@ -35,7 +35,7 @@ router.use(verifyAdmin)
 
 router
     .route("/updateCompanydetails")
-    .patch(updateCompanydetailsHandler)
+    .patch(uploadOnCloudFlare.single("picture"),updateCompanydetailsHandler)
 
 router
     .route("/deleteAdocument")
