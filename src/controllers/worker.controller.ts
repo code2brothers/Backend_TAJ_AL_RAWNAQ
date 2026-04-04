@@ -91,13 +91,19 @@ const viewAllWorkerHandler = async (req: AuthRequest, res: Response) => {
 
 const viewOneWorkerHandler = async (req: AuthRequest, res: Response) => {
     // Assuming you set up your route like this: router.get("/:visaNumber", viewOneWorkerHandler)
-    const { passportNumber } = req.params;
+    const { passportNumber,name } = req.query;
 
-    if (!passportNumber) {
+    if (!passportNumber && !name) {
         throw new ApiError(400, "Please provide a passport  Number to search for.");
     }
-
-    const worker = await Worker.findOne({ passportNumber });
+    const filter : any = {};
+    if (passportNumber && typeof passportNumber === "string" && passportNumber.trim()) {
+        filter.passportNumber = { $regex: passportNumber.trim(), $options: "i" };
+    }
+    else if(name && typeof name === "string" && name.trim()){
+        filter.name = { $regex: name.trim(), $options: "i" };
+    }
+    const worker = await Worker.find(filter);
 
     if (!worker) {
         throw new ApiError(404, "Worker does not exist with the provided Visa Number.");
