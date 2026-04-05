@@ -3,7 +3,6 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import { ErrorHandler } from "./utils/ErrorHandler.js";
 import { verifyJwt } from "./middleware/auth.middleware.js";
-import testingRoute from "./routes/testing.route.js";
 import userRouter from "./routes/user.route.js"
 import employeeRouter from "./routes/employee.route.js"
 import workerRouter from "./routes/worker.route.js"
@@ -30,7 +29,6 @@ app.use(express.static("public"))
 
 
 // ALL ROUTES
-app.use("/api/v1/testing", testingRoute)
 app.use("/api/v1/user", userRouter)
 app.use("/api/v1/contact", contactRouter)
 
