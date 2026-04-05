@@ -1,7 +1,6 @@
 import { S3Client, DeleteObjectCommand} from "@aws-sdk/client-s3";
 
-// 1. Initialize Cloudflare R2 Client
- const s3Client = new S3Client({
+const s3Client = new S3Client({
   region: "auto",
   endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
   credentials: {
@@ -26,29 +25,8 @@ const deleteFileFromCloudFlare = async (fileKey: string) => {
   }
 };
 
-// ==========================================
-// C. GET VIEW URL (For your Controller)
-// import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-//import { S3Client, DeleteObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
-// ==========================================
-// export const getFileUrl = async (fileKey: string) => {
-//   try {
-//     const command = new GetObjectCommand({
-//       Bucket: BUCKET_NAME,
-//       Key: fileKey,
-//     });
-//     // URL expires in 1 hour
-//     return await getSignedUrl(s3Client, command, { expiresIn: 3600 });
-//   } catch (error) {
-//     console.error("URL Gen Error:", error);
-//     return null;
-//   }
-// };
-
-
 const getFileUrl = async (fileKey:string) => {
   return `${process.env.PUBLICDOMAIN}/${fileKey}`;
 };
-
 
 export {s3Client,BUCKET_NAME,deleteFileFromCloudFlare,getFileUrl}

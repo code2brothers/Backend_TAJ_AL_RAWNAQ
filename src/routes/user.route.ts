@@ -11,10 +11,7 @@ const router = Router()
 
 router
     .route("/login")
-    .get((_,res)=>{res.json("login endpoint hit")})
-    // .post(verifyaccess(""),)
     .post(loginHandler)
-// refreshAccessToken
 
 router
     .route("/refreshAccessToken")

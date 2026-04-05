@@ -52,7 +52,7 @@ const loginHandler:RequestHandler =async(req,res)=>{
 
     const {accessToken, refreshToken} = await generateAccessAndRefereshTokens(user._id)
 
-    // const loginUser = await  User.findById(user._id).select("-password refreshToken")
+    
     const loginUser = await  User.findById(user._id)
 
     return res
@@ -69,7 +69,7 @@ const logoutHandler=async(req:AuthRequest,res:Response)=>{
         req.user!._id,
         {
             $unset: {
-                refreshToken: 1 // this removes the field from document
+                refreshToken: 1 
             }
         },
         {

@@ -12,10 +12,6 @@ import {
 
 const router = Router()
 
-router
-    .route("/")
-    .get((req:AuthRequest,res:Response)=>{res.json("manage toOwner endpoint hit")})
-
 router.use(verifyAccess("MANAGE_PAYMENTS"))
 
 
@@ -33,14 +29,5 @@ router.use(verifyAdmin)
 router
     .route("/updatePaymentdetails")
     .patch(uploadOnCloudFlare.single("document"),updatePaymentdetailsHandler)
-
-// router
-//     .route("/updatedocument")
-//     .patch(uploadOnCloudFlare.single("document"),updatedocumentHandler)
-
-
-
-
-
 
 export  default router

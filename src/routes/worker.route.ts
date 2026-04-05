@@ -8,13 +8,9 @@ import {
     viewOneWorkerHandler
 } from "../controllers/worker.controller.js";
 import {uploadOnCloudFlare} from "../middleware/uploadonCloudFlare.middleware.js";
-// import {updatedocumentHandler} from "../controllers/worker.controller.js";
 
 const router = Router()
 
-router
-    .route("/")
-    .get((req:AuthRequest,res:Response)=>{res.json("manage worker endpoint hit")})
 
 router.use(verifyAccess("MANAGE_WORKERS"))
 
@@ -34,9 +30,6 @@ router.use(verifyAdmin)
 router
     .route("/updateWorkerdetails")
     .patch(uploadOnCloudFlare.fields([{name: "newdocument", maxCount: 1}, {name: "picture", maxCount: 1}]),updateWorkerdetailsHandler)
-// router
-//     .route("/updatedocument")
-//     .patch(uploadOnCloudFlare.single("newdocument"),updatedocumentHandler)
 
 
 export  default router

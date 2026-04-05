@@ -12,9 +12,7 @@ export const company_OverviewHandler = async (req: AuthRequest, res: Response) =
     const { year } = req.query;
     const matchStage = year ? { $match: { year: year as string } } : { $match: {} };
 
-    // ============================================================================
     // 1. INFLOW: Company Payments (Money coming IN)
-    // ============================================================================
     const incomePromise = CompanyPaymentToOwner.aggregate([
         matchStage,
         {
@@ -37,9 +35,7 @@ export const company_OverviewHandler = async (req: AuthRequest, res: Response) =
         }
     ]);
 
-    // ============================================================================
     // 2. OUTFLOW: Worker Payments (Money going OUT to manpower)
-    // ============================================================================
     const workerExpensePromise = OwnerPaymentToWorker.aggregate([
         matchStage,
         {
@@ -53,9 +49,7 @@ export const company_OverviewHandler = async (req: AuthRequest, res: Response) =
         }
     ]);
 
-    // ============================================================================
     // 3. OUTFLOW: Company Expenditures (Money going OUT for internal overhead)
-    // ============================================================================
     const internalExpensePromise = CompanyExpenditure.aggregate([
         matchStage,
         {
@@ -68,9 +62,7 @@ export const company_OverviewHandler = async (req: AuthRequest, res: Response) =
         }
     ]);
 
-    // ============================================================================
     // EXECUTE ALL 3 QUERIES SIMULTANEOUSLY FOR MAXIMUM SPEED
-    // ============================================================================
     const [income, workerExpenses, internalExpenses] = await Promise.all([
         incomePromise,
         workerExpensePromise,
