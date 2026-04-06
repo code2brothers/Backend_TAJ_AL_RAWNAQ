@@ -1,10 +1,10 @@
 import {Router} from "express";
 import {verifyJwt} from "../middleware/auth.middleware.js";
 import {
-    currentUserHandler,
+    currentUserHandler, forgotPasswordHandler,
     loginHandler,
     logoutHandler,
-    refreshAccessTokenHandler
+    refreshAccessTokenHandler, resetPasswordHandler
 } from "../controllers/user.controller.js";
 
 const router = Router()
@@ -12,6 +12,12 @@ const router = Router()
 router
     .route("/login")
     .post(loginHandler)
+router
+    .route("/forgotPassword")
+    .post(forgotPasswordHandler)
+router
+    .route("/resetPassword/:token")
+    .patch(resetPasswordHandler)
 
 router
     .route("/refreshAccessToken")

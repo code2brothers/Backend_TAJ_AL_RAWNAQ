@@ -1,7 +1,7 @@
 import {Schema, model, Document, Model} from "mongoose"
 import jwt from "jsonwebtoken";
-import {NextFunction} from "express";
 import bcrypt from "bcrypt"
+import crypto from "crypto";
 const cleanTransform = (doc: any, ret: any) => {
     // ret.id = ret._id;
     // delete ret._id;
@@ -25,12 +25,15 @@ export interface IUser extends Document {
     is_Active: boolean;
     picture?: string;
     refreshToken?: string;
+    resetPasswordToken?: String;
+    resetPasswordExpire?: Date;
     // Note: 'id', 'createdAt', and 'updatedAt' are handled automatically by Mongoose
 }
 export interface IUserMethods {
     isPasswordCorrect(password: string): Promise<boolean>;
     generateAccessToken(): string;
     generateRefreshToken(): string;
+    getResetPasswordToken():string
 }
 
 type UserModel = Model<IUser, {}, IUserMethods>;
@@ -58,7 +61,8 @@ const userSchema = new Schema<IUser, UserModel, IUserMethods>({
     },
     password: {
         type: String,
-        required: [true, "Password is required."]
+        required: [true, "Password is required."],
+        select:false
     },
     role: {
         type: String,
@@ -91,6 +95,8 @@ const userSchema = new Schema<IUser, UserModel, IUserMethods>({
     refreshToken: {
         type: String
     },
+    resetPasswordToken: String,
+    resetPasswordExpire: Date,
 },{timestamps:true,
    //  here after timestamps you can define all methods but either define all or none
    // methods:{
@@ -141,5 +147,22 @@ userSchema.pre("save", async function () {
     this.password = await bcrypt.hash(this.password, 10)
 
 })
+userSchema.methods.getResetPasswordToken = function () {
+    // 1. Generate a random 20-character hex string (This goes in the email)
+    const resetToken = crypto.randomBytes(20).toString("hex");
 
+    // 2. Hash it and save it to the database (Security best practice!)
+    // We use standard sha256 here because tokens are already random and don't need bcrypt's slowness
+    this.resetPasswordToken = crypto
+        .createHash("sha256")
+        .update(resetToken)
+        .digest("hex");
+
+    // 3. Set expiration to 15 minutes from right now
+    this.resetPasswordExpire = new Date(Date.now() + 15 * 60 * 1000);
+
+
+    // 4. Return the UNHASHED token so we can send it in the URL
+    return resetToken;
+};
 export const User = model<IUser, UserModel>("User",userSchema)

@@ -112,10 +112,7 @@ const updateEmployeedetailsHandler = async (req: AuthRequest, res: Response) => 
                 delete updateData[field];
             }
         });
-
-        if (updateData.password) {
-            employee.markModified("password");
-        }
+        
 
         //  THE SECURE UPDATE PATTERN (Replaces findByIdAndUpdate)
 
