@@ -29,6 +29,7 @@
   "homepage": "https://github.com/code2brothers/Backend_TAJ_AL_RAWNAQ#readme",
   "dependencies": {
     "@aws-sdk/client-s3": "^3.991.0",
+    "bcrypt": "^6.0.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "express": "^5.2.1",
@@ -39,6 +40,7 @@
     "nodemailer": "^8.0.4"
   },
   "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
     "@types/cookie-parser": "^1.4.10",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",

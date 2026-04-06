@@ -62,85 +62,93 @@ const viewAllEmployeeHandler =async(req:AuthRequest,res:Response)=>{
 }
 
 
-const updateEmployeedetailsHandler =async(req:AuthRequest,res:Response)=>{
+const updateEmployeedetailsHandler = async (req: AuthRequest, res: Response) => {
+    const { _id, ...updateData } = req.body;
+    const picFile = req.file as multerS3File | undefined;
 
-        const { _id, ...updateData } = req.body;
-        const picFile = req.file as multerS3File | undefined;
+    // 1. EARLY VALIDATION
+    if (!_id) {
+        if (picFile) deleteFileFromCloudFlare(picFile.key).catch(e => console.error("Cleanup error:", e));
+        throw new ApiError(400, "Provide employee _id to update!");
+    }
 
-        // 1. EARLY VALIDATION
-        if (!_id) {
+    if (Object.keys(updateData).length === 0 && !picFile) {
+        throw new ApiError(400, "Provide at least one field to update!");
+    }
+
+    // 2. MAIN EXECUTION BLOCK
+    try {
+        // Fetch existing employee (Step 1 of Find, Modify, Save)
+        const employee = await User.findById(_id);
+
+        if (!employee) {
             if (picFile) deleteFileFromCloudFlare(picFile.key).catch(e => console.error("Cleanup error:", e));
-            throw new ApiError(400, "Provide employee _id to update!");
+            throw new ApiError(404, "Employee not found with the provided ID.");
         }
 
-        if (Object.keys(updateData).length === 0 && !picFile) {
-            throw new ApiError(400, "Provide at least one field to update!");
-        }
-
-        // 2. MAIN EXECUTION BLOCK
-        try {
-            // Fetch existing employee to get old picture URL
-            const existingEmployee = await User.findById(_id);
-            if (!existingEmployee) {
-                if (picFile) deleteFileFromCloudFlare(picFile.key).catch(e => console.error("Cleanup error:", e));
-                throw new ApiError(404, "Employee not found with the provided ID.");
-            }
-
-            // If new picture uploaded, delete old picture from Cloudflare
-            if (picFile) {
-                if (existingEmployee.picture) {
-                    try {
-                        const domain = process.env.PUBLICDOMAIN as string;
-                        if (existingEmployee.picture.includes(domain)) {
-                            const oldPicKey = existingEmployee.picture.split(`${domain}/`)[1];
-                            if (oldPicKey) {
-                                deleteFileFromCloudFlare(oldPicKey).catch(e => console.error("Failed to delete old picture:", e));
-                            }
+        // Handle Cloudflare Picture Swapping
+        if (picFile) {
+            if (employee.picture) {
+                try {
+                    const domain = process.env.PUBLICDOMAIN as string;
+                    if (employee.picture.includes(domain)) {
+                        const oldPicKey = employee.picture.split(`${domain}/`)[1];
+                        if (oldPicKey) {
+                            deleteFileFromCloudFlare(oldPicKey).catch(e => console.error("Failed to delete old picture:", e));
                         }
-                    } catch (cleanupError) {
-                        console.error("Cloudflare Picture URL Parse Error:", cleanupError);
                     }
+                } catch (cleanupError) {
+                    console.error("Cloudflare Picture URL Parse Error:", cleanupError);
                 }
-                const pictureUrl = await getFileUrl(picFile.key);
-                updateData.picture = pictureUrl;
             }
-
-            const forbiddenFields = ["createdAt", "updatedAt"];
-
-            forbiddenFields.forEach((field) => {
-                if (updateData[field] !== undefined) {
-                    delete updateData[field];
-                }
-            });
-
-            const updatedEmployee = await User.findByIdAndUpdate(
-                _id,
-                {
-                    $set: updateData,
-                    $unset: { refreshToken: 1 }
-                },
-                {
-                    returnDocument: "after",
-                    runValidators: true
-                }
-            ).select("-password");
-
-            return res
-                .status(200)
-                .json(new ApiResponse(200, updatedEmployee, "Employee details updated successfully"));
-
-        } catch (err: any) {
-            // 3. CENTRALIZED CLEANUP
-            if (picFile) {
-                console.log("Database error. Deleting orphaned newly uploaded picture:", picFile.key);
-                deleteFileFromCloudFlare(picFile.key).catch(e => console.error("Cleanup failed:", e));
-            }
-
-            const statusCode = err.statusCode || 400;
-            throw new ApiError(statusCode, err.message || "Failed to update employee details.");
+            const pictureUrl = await getFileUrl(picFile.key);
+            updateData.picture = pictureUrl;
         }
-}
 
+        // Protect specific fields from being overwritten
+        const forbiddenFields = ["createdAt", "updatedAt"];
+        forbiddenFields.forEach((field) => {
+            if (updateData[field] !== undefined) {
+                delete updateData[field];
+            }
+        });
+
+        if (updateData.password) {
+            employee.markModified("password");
+        }
+
+        //  THE SECURE UPDATE PATTERN (Replaces findByIdAndUpdate)
+
+        // 1. Apply dynamic updates using a loop
+        for (const key in updateData) {
+            // We use keyof to satisfy TypeScript's strict typing
+            (employee as any)[key] = updateData[key];
+        }
+
+        // 2. Replicate the $unset behavior for refreshToken
+        employee.refreshToken = undefined;
+
+        // 3. Save the document and automatically triggers runValidators: true AND your bcrypt pre('save') hook!
+        await employee.save();
+
+        // 4. Replicate `.select("-password")`
+        const updatedEmployeeObject = employee.toObject();
+        delete (updatedEmployeeObject as { password?: string }).password;
+        return res
+            .status(200)
+            .json(new ApiResponse(200, updatedEmployeeObject, "Employee details updated successfully"));
+
+    } catch (err: any) {
+        // 3. CENTRALIZED CLEANUP
+        if (picFile) {
+            console.log("Database error. Deleting orphaned newly uploaded picture:", picFile.key);
+            deleteFileFromCloudFlare(picFile.key).catch(e => console.error("Cleanup failed:", e));
+        }
+
+        const statusCode = err.statusCode || 400;
+        throw new ApiError(statusCode, err.message || "Failed to update employee details.");
+    }
+};
 
 
 

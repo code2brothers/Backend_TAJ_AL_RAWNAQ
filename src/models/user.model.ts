@@ -1,5 +1,7 @@
 import {Schema, model, Document, Model} from "mongoose"
 import jwt from "jsonwebtoken";
+import {NextFunction} from "express";
+import bcrypt from "bcrypt"
 const cleanTransform = (doc: any, ret: any) => {
     // ret.id = ret._id;
     // delete ret._id;
@@ -26,7 +28,7 @@ export interface IUser extends Document {
     // Note: 'id', 'createdAt', and 'updatedAt' are handled automatically by Mongoose
 }
 export interface IUserMethods {
-    isPasswordCorrect(password: string): boolean;
+    isPasswordCorrect(password: string): Promise<boolean>;
     generateAccessToken(): string;
     generateRefreshToken(): string;
 }
@@ -104,8 +106,9 @@ const userSchema = new Schema<IUser, UserModel, IUserMethods>({
     }
 })
 
-userSchema.methods.isPasswordCorrect =  function(password:string){
-    return (this.password === password)
+userSchema.methods.isPasswordCorrect = async function(password:string){
+    return await bcrypt.compare(password, this.password)
+
 }
 
 userSchema.methods.generateAccessToken=function (){
@@ -132,5 +135,11 @@ userSchema.methods.generateRefreshToken =function (){
         }
     )
 }
+userSchema.pre("save", async function () {
+    if(!this.isModified("password")) return ;
+
+    this.password = await bcrypt.hash(this.password, 10)
+
+})
 
 export const User = model<IUser, UserModel>("User",userSchema)
