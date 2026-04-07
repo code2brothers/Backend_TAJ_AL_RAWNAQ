@@ -16,12 +16,15 @@ const sendEmailHandler = async (req: AuthRequest, res: Response) => {
 
     try {
         // Create the email transporter using your Gmail credentials
+
         const transporter = nodemailer.createTransport({
-            service: "gmail",
+            host: "smtp.zoho.in", // or smtp.zoho.com depending on your region
+            port: 465,
+            secure: true,
             auth: {
                 user: process.env.SENDER, // e.g., "yourcompany@gmail.com"
-                pass: process.env.SENDER_PASS, // IMPORTANT: This must be an "App Password", not your login password!
-            },
+                pass: process.env.SENDER_PASS, // Must be the 16-character App Password from Zoho Security settings
+            }
         });
 
         const submissionTime = new Date().toLocaleString("en-IN", {

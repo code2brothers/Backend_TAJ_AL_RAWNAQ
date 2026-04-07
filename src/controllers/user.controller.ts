@@ -1,53 +1,53 @@
-import {RequestHandler,Response} from "express";
-import {User} from "../models/user.model.js";
-import {ApiError} from "../utils/ApiError.js";
-import {model, Schema, Types} from "mongoose";
-import {options} from "../constants.js";
-import {ApiResponse} from "../utils/ApiResponse.js";
-import {AuthRequest, CustomJwtPayload} from "../type/auth.interafce.js";
+import { RequestHandler, Response } from "express";
+import { User } from "../models/user.model.js";
+import { ApiError } from "../utils/ApiError.js";
+import { model, Schema, Types } from "mongoose";
+import { options } from "../constants.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
+import { AuthRequest, CustomJwtPayload } from "../type/auth.interafce.js";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
 import crypto from "crypto";
 
-const generateAccessAndRefereshTokens =async(userId:string|Types.ObjectId)=>{
-          try{
-              const user = await  User.findById(userId)
-              if(!user){
-                  throw new ApiError(404,"User does not exist ")
-              }
-              const accessToken = await user.generateAccessToken()
-              const refreshToken = await user.generateRefreshToken()
+const generateAccessAndRefereshTokens = async (userId: string | Types.ObjectId) => {
+    try {
+        const user = await User.findById(userId)
+        if (!user) {
+            throw new ApiError(404, "User does not exist ")
+        }
+        const accessToken = await user.generateAccessToken()
+        const refreshToken = await user.generateRefreshToken()
 
-              user.refreshToken= refreshToken;
-              await user.save({validateBeforeSave: false})
+        user.refreshToken = refreshToken;
+        await user.save({ validateBeforeSave: false })
 
-              return {accessToken,refreshToken}
+        return { accessToken, refreshToken }
 
-          }catch (error){
-              throw new ApiError(500, "Something went wrong while generating referesh and access token")
-          }
+    } catch (error) {
+        throw new ApiError(500, "Something went wrong while generating referesh and access token")
+    }
 }
 
 
 
-const loginHandler:RequestHandler =async(req,res)=>{
-    const {email,password}=req.body
-    if(!email ||!password){
-        throw new ApiError(400," email or password is missing")
+const loginHandler: RequestHandler = async (req, res) => {
+    const { email, password } = req.body
+    if (!email || !password) {
+        throw new ApiError(400, " email or password is missing")
     }
-    const user = await User.findOne({email}).select('+password')
-    if(!user){
-        throw new ApiError(404,"User does not exist ")
+    const user = await User.findOne({ email }).select('+password')
+    if (!user) {
+        throw new ApiError(404, "User does not exist ")
     }
 
-    if(!user.is_Active){
+    if (!user.is_Active) {
         throw new ApiError(401, "You are deactivated");
     }
 
-   const isPasswordValid = await user.isPasswordCorrect(password)
+    const isPasswordValid = await user.isPasswordCorrect(password)
 
-    if(!isPasswordValid){
-        throw new ApiError(401,"Invalid user Credentials")
+    if (!isPasswordValid) {
+        throw new ApiError(401, "Invalid user Credentials")
     }
     if (user.resetPasswordToken || user.resetPasswordExpire) {
         user.resetPasswordToken = undefined;
@@ -55,30 +55,30 @@ const loginHandler:RequestHandler =async(req,res)=>{
     }
     await user.save({ validateBeforeSave: false })
 
-    const {accessToken, refreshToken} = await generateAccessAndRefereshTokens(user._id)
+    const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(user._id)
 
-    
-    const loginUser = await  User.findById(user._id)
+
+    const loginUser = await User.findById(user._id)
 
     return res
-            .status(200)
-            .cookie("accessToken", accessToken, options)
-            .cookie("refreshToken", refreshToken, options)
-            .json( new ApiResponse(200,{user:loginUser,accessToken,refreshToken},"User logged In Successfully"))
+        .status(200)
+        .cookie("accessToken", accessToken, options)
+        .cookie("refreshToken", refreshToken, options)
+        .json(new ApiResponse(200, { user: loginUser, accessToken, refreshToken }, "User logged In Successfully"))
 
 }
 
 
-const logoutHandler=async(req:AuthRequest,res:Response)=>{
+const logoutHandler = async (req: AuthRequest, res: Response) => {
     await User.findByIdAndUpdate(
         req.user!._id,
         {
             $unset: {
-                refreshToken: 1 
+                refreshToken: 1
             }
         },
         {
-            returnDocument:"after"
+            returnDocument: "after"
         }
     )
 
@@ -90,13 +90,13 @@ const logoutHandler=async(req:AuthRequest,res:Response)=>{
 }
 
 
-const currentUserHandler = (req:AuthRequest,res:Response)=>{
+const currentUserHandler = (req: AuthRequest, res: Response) => {
     return res
         .status(200)
-        .json(new ApiResponse(200,req.user,"current user fetched succesfully! "))
+        .json(new ApiResponse(200, req.user, "current user fetched succesfully! "))
 }
 
-const refreshAccessTokenHandler = async (req:AuthRequest,res:Response)=> {
+const refreshAccessTokenHandler = async (req: AuthRequest, res: Response) => {
     const incomingRefreshToken = req.cookies?.refreshToken || req.body.refreshToken
 
     if (!incomingRefreshToken) {
@@ -118,7 +118,7 @@ const refreshAccessTokenHandler = async (req:AuthRequest,res:Response)=> {
         }
 
 
-        const {accessToken, refreshToken} = await generateAccessAndRefereshTokens(user._id)
+        const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(user._id)
 
         return res
             .status(200)
@@ -127,7 +127,7 @@ const refreshAccessTokenHandler = async (req:AuthRequest,res:Response)=> {
             .json(
                 new ApiResponse(
                     200,
-                    {accessToken, refreshToken},
+                    { accessToken, refreshToken },
                     "Access token refreshed"
                 )
             )
@@ -140,7 +140,7 @@ const refreshAccessTokenHandler = async (req:AuthRequest,res:Response)=> {
     }
 }
 
-const forgotPasswordHandler = async (req:AuthRequest,res:Response)=>{
+const forgotPasswordHandler = async (req: AuthRequest, res: Response) => {
     const { email } = req.body;
 
     if (!email) {
@@ -168,11 +168,13 @@ const forgotPasswordHandler = async (req:AuthRequest,res:Response)=>{
     try {
         // Create the email transporter using your exact config
         const transporter = nodemailer.createTransport({
-            service: "gmail",
+            host: "smtp.zoho.in", // or smtp.zoho.com depending on your region
+            port: 465,
+            secure: true,
             auth: {
-                user: process.env.SENDER,
-                pass: process.env.SENDER_PASS,
-            },
+                user: process.env.SENDER2, // e.g., "yourcompany@gmail.com"
+                pass: process.env.SENDER_PASS2, // Must be the 16-character App Password from Zoho Security settings
+            }
         });
 
         // Format a professional looking HTML email matching your "Taj Al Rawnaq" theme
@@ -237,7 +239,7 @@ const forgotPasswordHandler = async (req:AuthRequest,res:Response)=>{
 
         // Configure the email options
         const mailOptions = {
-            from: process.env.SENDER,
+            from: process.env.SENDER2,
             to: user.email, // Send to the specific user who requested the reset
             subject: `Password Reset Request - Taj Al Rawnaq`,
             html: htmlTemplate,
@@ -266,7 +268,7 @@ const forgotPasswordHandler = async (req:AuthRequest,res:Response)=>{
 
 
 
-const resetPasswordHandler =async (req:AuthRequest,res:Response)=>{
+const resetPasswordHandler = async (req: AuthRequest, res: Response) => {
     const { token } = req.params;
     const { newPassword } = req.body;
     if (typeof token !== 'string') {
@@ -297,15 +299,15 @@ const resetPasswordHandler =async (req:AuthRequest,res:Response)=>{
     user.resetPasswordExpire = undefined;
 
     // 6. Save! (Your bcrypt pre('save') hook catches the new password right here!)
-        await user.save();
+    await user.save();
 
-        return res.status(200).json(new ApiResponse(200, null, "Password has been successfully reset!"));
+    return res.status(200).json(new ApiResponse(200, null, "Password has been successfully reset!"));
 
 }
 
 
 
 
-export {loginHandler,logoutHandler,currentUserHandler,refreshAccessTokenHandler,forgotPasswordHandler,resetPasswordHandler}
+export { loginHandler, logoutHandler, currentUserHandler, refreshAccessTokenHandler, forgotPasswordHandler, resetPasswordHandler }
 
 
