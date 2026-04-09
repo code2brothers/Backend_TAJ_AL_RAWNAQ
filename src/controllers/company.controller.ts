@@ -9,7 +9,7 @@ import {deleteFileFromCloudFlare, getFileUrl} from "../utils/cloudflare.js";
 const addNewCompanyHandler = async (req: AuthRequest, res: Response) => {
     const { companyName, registrationNo, ...restData } = req.body;
 
-    // 🔥 Extract files FIRST so we can clean them up if validations fail
+    //  Extract files FIRST so we can clean them up if validations fail
     const filesMap = req.files as { [fieldname: string]: multerS3File[] } | undefined;
     const docFiles = filesMap?.documents || [];
     const picFile = filesMap?.picture?.[0];

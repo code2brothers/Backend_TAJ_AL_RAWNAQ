@@ -12,9 +12,6 @@ const uploadOnCloudFlare = multer({
         },
         key: function (req, file, cb) {
             // Generates unique filename: "documents/1708523-random.pdf"
-            // const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-            // const ext = path.extname(file.originalname);
-            // cb(null, `documents/${uniqueSuffix}${ext}`);
             const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
             const cleanFileName = file.originalname.toLowerCase().replace(/\s+/g, '-');
             cb(null, `${uniqueSuffix}_${cleanFileName}`);
